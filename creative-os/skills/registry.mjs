@@ -11,6 +11,6 @@ export const getSkill = (name) => SKILLS.find((s) => s.name === name);
 
 /** Serializable view for the dashboard and the JEV state. */
 export const describeSkills = () =>
-  SKILLS.map(({ name, description, engine, status, costEstimate, inputSchema, outputSchema }) => ({
-    name, description, engine, status, costEstimate, inputSchema, outputSchema,
+  SKILLS.map(({ name, label, description, engine, status, costEstimate, inputSchema, outputSchema }) => ({
+    name, label, description, engine, status, costEstimate, inputSchema, outputSchema,
   }));

@@ -18,8 +18,9 @@ export const config = {
   port: num("CREATIVE_OS_PORT", 4173),
 };
 
+// brand and product are working names passed to every skill so outputs stay consistent; shown in the dashboard.
 export const DEMO_BRIEF = {
-  text: "Create a premium launch campaign for a Saudi perfume brand: hero image, short video, motion teaser, landing page, and an X post.",
+  text: "Create a premium launch campaign for a Saudi perfume brand",
   brand: "LAYALI",
   product: "Oud Nights Eau de Parfum",
 };

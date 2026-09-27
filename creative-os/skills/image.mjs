@@ -1,49 +1,67 @@
-// IMAGE: local SVG key-visual composer (no model, no API, $0).
-import { writeAsset } from "../assets.mjs";
-import { esc, palette } from "./brand.mjs";
+// IMAGE: Claude authors a real SVG, Playwright rasterizes it to PNG. A vector illustration, not an image model.
+import { writeFile } from "node:fs/promises";
+import { claude, unfence } from "../llm.mjs";
+import { assetPath, finalizeAsset } from "../assets.mjs";
+import { getBrowser, watchPage } from "../browser.mjs";
+import { fileFacts, pngSize, checks } from "../evidence.mjs";
+
+const W = 1600, H = 900;
 
 export const image = {
   name: "IMAGE",
-  description: "Hero key visual for the campaign (1600x900 SVG composed locally from a brand template).",
-  engine: "local-svg-template",
+  label: "VECTOR IMAGE · LLM AUTHORED",
+  description: `Hero key visual: a ${W}x${H} SVG illustration written by Claude and rasterized to PNG. Vector art, not a photographic image model.`,
+  engine: "claude -p → SVG → Playwright PNG",
   status: "CONNECTED",
-  costEstimate: { usd: 0, note: "local" },
-  inputSchema: { brief: "object", brand: "string", product: "string", version: "number" },
-  outputSchema: { file: "string (svg)", width: "number", height: "number", palette: "string", layers: "string[]" },
-  async execute({ runId, brief, version }) {
-    const p = palette(version);
-    const centered = version % 2 === 1;
-    const bx = centered ? 800 : 1080;
-    const tx = centered ? 800 : 140;
-    const anchor = centered ? "middle" : "start";
-    const ty = centered ? 760 : 420;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-<defs>
-<radialGradient id="glow" cx="${bx / 16}%" cy="42%" r="45%"><stop offset="0" stop-color="${p.accent}" stop-opacity=".35"/><stop offset="1" stop-color="${p.bg}" stop-opacity="0"/></radialGradient>
-<linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.accent}"/><stop offset=".55" stop-color="${p.soft}"/><stop offset="1" stop-color="${p.accent}"/></linearGradient>
-</defs>
-<rect width="1600" height="900" fill="${p.bg}"/><rect width="1600" height="900" fill="url(#glow)"/>
-<g transform="translate(${bx} 380)">
-<rect x="-26" y="-250" width="52" height="60" rx="6" fill="${p.accent}"/>
-<rect x="-14" y="-192" width="28" height="30" fill="${p.soft}"/>
-<path d="M-120 -160 H120 Q150 -160 150 -120 V170 Q150 210 110 210 H-110 Q-150 210 -150 170 V-120 Q-150 -160 -120 -160Z" fill="url(#glass)" opacity=".92"/>
-<path d="M-110 -130 V180" stroke="${p.text}" stroke-opacity=".25" stroke-width="6"/>
-<text y="40" text-anchor="middle" font-family="Georgia,serif" font-size="30" letter-spacing="8" fill="${p.bg}">${esc(brief.brand)}</text>
-</g>
-<text x="${tx}" y="${ty}" text-anchor="${anchor}" font-family="Georgia,serif" font-size="84" letter-spacing="14" fill="${p.text}">${esc(brief.brand)}</text>
-<text x="${tx}" y="${ty + 56}" text-anchor="${anchor}" font-family="Helvetica,Arial,sans-serif" font-size="28" letter-spacing="6" fill="${p.accent}">${esc(brief.product.toUpperCase())}</text>
-</svg>`;
-    const asset = await writeAsset({ runId, skill: "IMAGE", version, ext: "svg", content: svg });
-    return {
-      asset,
-      evidence: {
-        format: "SVG", width: 1600, height: 900, palette: p.name,
-        layout: centered ? "centered bottle, title below" : "title left, bottle right",
-        layers: ["background gradient", "radial glow", "perfume bottle with cap and brand label", "brand wordmark", "product line"],
-        text: [brief.brand, brief.product.toUpperCase()],
-        bytes: Buffer.byteLength(svg),
-        generator: "local SVG template (not an image model)",
-      },
-    };
+  costEstimate: { usd: 0, billing: "Claude plan usage via claude -p (approved); rasterizing is local" },
+  inputSchema: { brief: "object", feedback: "string?" },
+  outputSchema: { svg: "file", png: `file ${W}x${H}` },
+  async execute({ runId, brief, version, feedback }) {
+    const prompt = `Create the hero key visual for this campaign as a single standalone SVG.
+Brief: ${brief.text}
+Brand name: ${brief.brand}. Product: ${brief.product}.
+Requirements: <svg> root with width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"; premium, dark, luxurious art direction; a perfume bottle as the hero; the brand name as text; no <script>, no <image>, no external references or fonts (use generic font families); gradients and filters are fine.
+Return ONLY the SVG markup.${feedback ? `\nThe previous version was rejected. Fix this: ${feedback}` : ""}`;
+    const r = await claude(prompt);
+    const svg = unfence(r.text);
+    const svgFile = assetPath(runId, "IMAGE", version, "svg");
+    const pngFile = assetPath(runId, "IMAGE", version, "png");
+    await writeFile(svgFile, svg);
+
+    const page = await (await getBrowser()).newPage({ viewport: { width: W, height: H } });
+    const w = watchPage(page);
+    await page.setContent(`<!doctype html><html><body style="margin:0;background:#000">${svg}</body></html>`);
+    const info = await page.evaluate(() => {
+      const el = document.querySelector("svg");
+      if (!el) return null;
+      const b = el.getBoundingClientRect();
+      return { renderedWidth: Math.round(b.width), renderedHeight: Math.round(b.height), elements: el.querySelectorAll("*").length,
+        texts: [...el.querySelectorAll("text")].map((t) => t.textContent.trim()).filter(Boolean).slice(0, 12) };
+    });
+    await page.screenshot({ path: pngFile, clip: { x: 0, y: 0, width: W, height: H } });
+    await page.close();
+
+    const png = await pngSize(pngFile);
+    const validation = checks([
+      ["SVG root present", Boolean(info)],
+      [`rendered at ${W}x${H}`, info?.renderedWidth === W && info?.renderedHeight === H, info && `${info.renderedWidth}x${info.renderedHeight}`],
+      ["no <script>", !/<script/i.test(svg)],
+      ["no external references", !/(href|src)\s*=\s*["']https?:/i.test(svg)],
+      ["brand name in SVG text", (info?.texts ?? []).some((t) => t.toUpperCase().includes(brief.brand.toUpperCase())), info?.texts.join(" | ")],
+      ["no console/page errors", !w.consoleErrors.length && !w.pageErrors.length, [...w.consoleErrors, ...w.pageErrors].join("; ") || undefined],
+      [`PNG is ${W}x${H}`, png.width === W && png.height === H, `${png.width}x${png.height}`],
+    ]);
+    const asset = await finalizeAsset({ runId, skill: "IMAGE", version, file: pngFile, evidence: {
+      kind: "vector illustration authored by an LLM (not an AI image model)",
+      files: [await fileFacts(pngFile), await fileFacts(svgFile)],
+      dimensions: png,
+      svg_elements: info?.elements ?? 0,
+      svg_text: info?.texts ?? [],
+      screenshots: [(await fileFacts(pngFile)).path],
+      console_errors: [...w.consoleErrors, ...w.pageErrors],
+      validation,
+      generator: { tool: "claude -p", model: r.model, durationMs: r.durationMs, outputTokens: r.outputTokens, reportedCostUsdListPrice: r.reportedCostUsd },
+    } });
+    return { asset };
   },
 };

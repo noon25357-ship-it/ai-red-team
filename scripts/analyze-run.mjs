@@ -30,7 +30,10 @@ for (const e of run.events) {
       skill = a.decision; decision = `next → ${a.decision}`; conf = a.confidence;
       picks.push(a.decision);
     } else if (e.kind === "review") {
-      const { quality, acceptable, action } = e.answers;
+      // Current runs answer review_action/quality_score; older runs used action/quality.
+      const action = e.answers.review_action ?? e.answers.action;
+      const quality = e.answers.quality_score ?? e.answers.quality;
+      const { acceptable } = e.answers;
       decision = `${action.decision} (q ${Math.round((quality.decision / 4) * 100)}, ok ${acceptable.decision ? "yes" : "no"} ${pct(acceptable.confidence)})`;
       conf = action.confidence;
       skill += ` v${e.version}`;
@@ -40,8 +43,15 @@ for (const e of run.events) {
     console.log(`${String(n).padEnd(3)} ${mmss(e.t)}  ${e.kind.padEnd(11)} ${skill.padEnd(9)} ${decision.padEnd(32)} ${pct(conf).padStart(10)}  ${String(e.latencyMs).padStart(5)}ms  ${e.model}`);
   } else if (e.type === "review_outcome") {
     console.log(`           → ${e.skill} v${e.version} ${e.outcome}: ${e.reason}`);
-  } else if (e.type === "skill_not_connected" || e.type === "guard" || e.type === "error") {
+  } else if (e.type === "skill_not_connected" || e.type === "guard" || e.type === "error" || e.type === "skill_failed") {
     console.log(`           ! ${e.type}${e.skill ? " " + e.skill : ""}: ${e.reason ?? e.error?.message}`);
+  } else if (e.type === "only_option") {
+    console.log(`           · ${e.skill} was the only remaining skill (no JEV call)`);
+  } else if (e.type === "skill_completed" && e.asset?.evidence?.validation) {
+    const v = e.asset.evidence.validation;
+    console.log(`           · ${e.skill} v${e.version} output ${e.asset.file}: ${v.passed} checks passed, ${v.failed} failed${v.failed ? " (" + v.results.filter((r) => !r.pass).map((r) => r.check).join("; ") + ")" : ""}`);
+  } else if (e.type === "human_review") {
+    console.log(`           · human ${e.decision} ${e.skill} → run ${e.status}`);
   }
 }
 

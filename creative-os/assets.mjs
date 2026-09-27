@@ -1,4 +1,4 @@
-// Asset pipeline: every output is written under outputs/<kind>/ with a .meta.json sidecar.
+// Asset pipeline: outputs/<kind>/<runId>-<skill>-v<N>.<ext> plus a .meta.json sidecar with evidence and JEV review.
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,18 +11,19 @@ export async function ensureOutputDirs() {
   for (const d of [...Object.values(DIRS), "demo", "runs"]) await mkdir(path.join(OUTPUTS, d), { recursive: true });
 }
 
-/** Write an asset and its metadata. Returns the metadata (paths are relative to the repo root). */
-export async function writeAsset({ runId, skill, version, ext, content }) {
-  const dir = path.join(OUTPUTS, DIRS[skill]);
-  await mkdir(dir, { recursive: true });
-  const file = path.join(dir, `${runId}-${skill.toLowerCase()}-v${version}.${ext}`);
-  await writeFile(file, content);
+export function assetPath(runId, skill, version, ext, suffix = "") {
+  return path.join(OUTPUTS, DIRS[skill], `${runId}-${skill.toLowerCase()}-v${version}${suffix}.${ext}`);
+}
+
+/** Record the primary file of an output with its evidence. Returns the metadata (paths relative to the repo root). */
+export async function finalizeAsset({ skill, version, file, evidence }) {
   const meta = {
     file: path.relative(ROOT, file),
     timestamp: new Date().toISOString(),
     sourceSkill: skill,
     version,
     status: "PENDING_REVIEW",
+    evidence,
     jevReview: null,
   };
   await writeMeta(meta);

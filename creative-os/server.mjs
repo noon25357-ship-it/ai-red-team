@@ -4,13 +4,13 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { config, DEMO_BRIEF } from "./config.mjs";
-import { runCreativeOS } from "./orchestrator.mjs";
+import { runCreativeOS, resolveHumanReview, runLogPath } from "./orchestrator.mjs";
 import { describeSkills } from "./skills/registry.mjs";
 import { OUTPUTS } from "./assets.mjs";
 
 const DASHBOARD = path.join(path.dirname(fileURLToPath(import.meta.url)), "dashboard", "index.html");
 const DEFAULT_DEMO_PACE_MS = 700;
-const TYPES = { ".html": "text/html; charset=utf-8", ".svg": "image/svg+xml", ".json": "application/json", ".webm": "video/webm", ".mp4": "video/mp4" };
+const TYPES = { ".html": "text/html; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".webm": "video/webm", ".mp4": "video/mp4" };
 let running = false;
 
 const sse = (res) => {
@@ -50,16 +50,35 @@ async function handle(req, res) {
   if (url.pathname === "/api/replay") {
     const name = url.searchParams.get("run") ?? (await latestRunFile());
     if (!name) { res.writeHead(404); return res.end("No saved run to replay. Run a live flow first."); }
-    const saved = JSON.parse(await readFile(path.join(OUTPUTS, "runs", path.basename(name.endsWith(".json") ? name : `${name}.json`)), "utf8"));
+    const saved = JSON.parse(await readFile(runLogPath(name.replace(/\.json$/, "")), "utf8"));
+    // Optional time compression caps each gap between events; the event timestamps shown stay the real ones.
+    const cap = url.searchParams.has("compress") ? Number(url.searchParams.get("compress")) : 0;
     const send = sse(res);
-    // Replays the recorded events at their original timing; every decision, latency, and model is from that real run.
-    const start = Date.now();
+    send({ type: "replay_info", runId: saved.runId, compressedGapMs: cap || null });
+    let prev = 0;
     for (const e of saved.events) {
-      const wait = e.t - (Date.now() - start);
+      const gap = e.t - prev;
+      prev = e.t;
+      const wait = cap ? Math.min(gap, cap) : gap;
       if (wait > 0) await new Promise((r) => setTimeout(r, wait));
       send({ ...e, replayOf: saved.runId });
     }
     return res.end();
+  }
+  const hr = url.pathname.match(/^\/api\/runs\/([\w-]+)\/human-review$/);
+  if (hr && req.method === "POST") {
+    let body = "";
+    for await (const c of req) body += c;
+    try {
+      const { skill, decision } = JSON.parse(body);
+      if (!["approve", "reject"].includes(decision)) throw new Error("decision must be approve or reject");
+      const r = await resolveHumanReview(hr[1], skill, decision);
+      res.writeHead(200, { "content-type": TYPES[".json"] });
+      return res.end(JSON.stringify(r));
+    } catch (err) {
+      res.writeHead(400, { "content-type": TYPES[".json"] });
+      return res.end(JSON.stringify({ error: err.message }));
+    }
   }
   if (url.pathname.startsWith("/outputs/")) {
     const file = path.join(OUTPUTS, path.normalize(decodeURIComponent(url.pathname.slice("/outputs/".length))));

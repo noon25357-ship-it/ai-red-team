@@ -79,6 +79,15 @@ main{display:grid;grid-template-columns:1fr 380px;gap:16px;min-height:0}
 .final b{color:var(--text);font-weight:700}
 body[data-state=finished] .final{visibility:visible}
 .pace{margin-left:auto;font-size:10.5px}
+.node{width:150px!important}
+.node .e{font-size:8.5px!important;letter-spacing:.08em!important;text-align:center;padding:0 6px}
+.node .timer{font:600 10px ui-monospace,Menlo,monospace;color:var(--gold2)}
+.tile video{width:100%;height:100%;object-fit:cover}
+.tile .cap{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;font-size:8.5px;letter-spacing:.12em;color:var(--gold2);background:linear-gradient(transparent,#000d);z-index:2}
+.hr{display:flex;gap:8px;align-items:center;padding:0 16px 10px;font-size:12px;flex-wrap:wrap}
+.hr b{color:var(--violet)}.hr .why{color:var(--mute);font-size:11px;max-width:420px}
+.hr button{border:1px solid var(--line);background:#15151f;color:var(--text);border-radius:8px;padding:5px 10px;font-size:11px;letter-spacing:.1em;cursor:pointer}
+.hr button.ok{border-color:#4fd8a088;color:var(--green)}.hr button.no{border-color:#ff6b7a88;color:var(--red)}
 </style>
 </head>
 <body data-state="idle">
@@ -103,25 +112,28 @@ body[data-state=finished] .final{visibility:visible}
     <h3>FINAL OUTPUTS</h3>
     <div class="tiles" id="tiles"></div>
     <div class="final" id="final"></div>
+    <div id="human"></div>
   </section>
 </div>
 <script>
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const REPLAY = params.get("replay");
+const COMPRESS = params.get("compress");
 if (REPLAY !== null) document.body.classList.add("is-replay");
 const R = 2 * Math.PI * 108;
-let skills = [];
+let skills = [], runId = null, timer = null;
 const nodes = {}, tiles = {}, links = {};
 
 const mmss = (t) => { const s = Math.floor(t / 1000); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
 const pct = (x) => `${Math.round(x * 100)}%`;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const q100 = (s) => Math.round((s / 4) * 100);
 
 function layout() {
   const st = $("stage").getBoundingClientRect();
   const cx = st.width / 2, cy = st.height / 2;
-  const rx = Math.min(st.width / 2 - 75, 330), ry = Math.min(st.height / 2 - 48, 200);
+  const rx = Math.min(st.width / 2 - 85, 330), ry = Math.min(st.height / 2 - 48, 200);
   $("links").innerHTML = "";
   skills.forEach((s, i) => {
     // Offset by half a slot so no node sits directly above or below the core.
@@ -138,11 +150,11 @@ function layout() {
 async function init() {
   const { skills: list, brief } = await (await fetch("/api/skills")).json();
   skills = list;
-  $("brief").textContent = brief.text;
+  $("brief").innerHTML = `${esc(brief.text)} <span style="color:var(--mute);font-size:12px">· working name: ${esc(brief.brand)} · ${esc(brief.product)}</span>`;
   for (const s of skills) {
     const n = document.createElement("div");
     n.className = "node" + (s.status !== "CONNECTED" ? " nc" : "");
-    n.innerHTML = `<div class="n">${s.name}</div><div class="e">${s.status === "CONNECTED" ? "LOCAL · $0" : "NOT CONNECTED"}</div><div class="s"></div>`;
+    n.innerHTML = `<div class="n">${s.name}</div><div class="e">${esc(s.label)}</div><div class="s"></div>`;
     $("stage").appendChild(n);
     nodes[s.name] = n;
     const t = document.createElement("div");
@@ -181,29 +193,65 @@ function log(t, text, cls = "", meta = "") {
 }
 const decisionMeta = (a, e) => `conf ${pct(a.confidence)} · ${e.latencyMs} ms · ${esc(e.model)}`;
 
-function tile(name, asset, evidence) {
-  const t = tiles[name], url = "/" + asset.file;
+// Elapsed time on the running skill; counts from the event timestamps, so replays show the real duration.
+function startTimer(name, t) {
+  stopTimer();
+  const started = performance.now();
+  const s = nodes[name].querySelector(".s");
+  timer = setInterval(() => { s.textContent = `RUNNING ${mmss(t + performance.now() - started).slice(1)}`; }, 250);
+}
+function stopTimer() { clearInterval(timer); timer = null; }
+
+function tile(name, asset) {
+  const t = tiles[name], ev = asset.evidence, url = "/" + asset.file;
   let body;
-  if (name === "IMAGE") body = `<img src="${url}" alt="">`;
-  else if (name === "MOTION" || name === "FRONTEND") body = `<iframe src="${url}" tabindex="-1"></iframe>`;
-  else if (name === "COPY") body = `<div class="body txt">${esc(evidence.x_post)}</div>`;
-  else if (name === "REVIEW") body = `<div class="body txt">✓ ${esc(evidence.delivered.join(", ") || "—")}\n✕ ${esc(evidence.missing.join(", ") || "—")}${evidence.flagged.length ? "\n⚑ " + esc(evidence.flagged.join(", ")) : ""}</div>`;
-  t.querySelector(".body")?.remove();
-  t.querySelector("img,iframe,.txt")?.remove();
-  t.insertAdjacentHTML("beforeend", body.startsWith("<div") ? body : `<div class="body">${body}</div>`);
+  if (name === "IMAGE") body = `<img src="${url}" alt=""><div class="cap">VECTOR IMAGE · LLM AUTHORED</div>`;
+  else if (name === "MOTION") body = `<video src="${url}" autoplay muted loop playsinline></video><div class="cap">MOTION GRAPHICS · ${Math.round((ev.duration?.animationMs ?? 0) / 100) / 10}s WEBM</div>`;
+  else if (name === "FRONTEND") body = `<img src="/${ev.screenshots[0]}" alt=""><div class="cap">TESTED · DESKTOP + MOBILE · ${ev.validation.passed}/${ev.validation.passed + ev.validation.failed} CHECKS</div>`;
+  else if (name === "COPY") body = `<div class="body txt">${esc(ev.generated_content?.x_post ?? "")}</div>`;
+  else if (name === "REVIEW") body = `<div class="body txt">${ev.validation.passed} checks passed\n${ev.validation.failed} failed${ev.not_connected?.length ? "\nnot connected: " + esc(ev.not_connected.join(", ")) : ""}</div>`;
+  t.querySelectorAll(".body,img,video,iframe,.txt,.cap").forEach((el) => el.remove());
+  t.insertAdjacentHTML("beforeend", body);
   t.querySelector(".st").textContent = `v${asset.version}`;
 }
 function tileStatus(name, outcome, q, v) {
   const st = tiles[name].querySelector(".st");
   st.className = "st b-" + outcome;
-  st.textContent = `v${v} · ${{ APPROVED: "✓", RETRY: "↻", HUMAN_REVIEW: "⚑" }[outcome] ?? outcome}${q != null ? " " + q : ""}`;
+  st.textContent = `v${v} · ${{ APPROVED: "✓", RETRY: "↻", HUMAN_REVIEW: "⚑", REJECTED: "✕" }[outcome] ?? outcome}${q != null ? " " + q : ""}`;
+}
+
+function showStatus(status) {
+  const ok = status === "DONE";
+  $("status").textContent = status.replace(/_/g, " ");
+  $("status").className = "pill " + (ok ? "ok" : status === "AWAITING_HUMAN_REVIEW" ? "live" : "bad");
+  document.body.dataset.status = status;
+}
+
+function humanPanel(summary) {
+  const waiting = Object.entries(summary.skillState).filter(([, s]) => s === "HUMAN_REVIEW");
+  $("human").innerHTML = waiting.map(([k]) => {
+    const why = summary.executions?.[k]?.at(-1)?.reason ?? "";
+    return `<div class="hr" data-skill="${k}"><b>HUMAN REVIEW · ${k}</b><span class="why">${esc(why)}</span>
+      <button class="ok" data-d="approve">APPROVE</button><button class="no" data-d="reject">REJECT</button></div>`;
+  }).join("");
+  $("human").querySelectorAll("button").forEach((b) => b.addEventListener("click", async () => {
+    const skill = b.closest(".hr").dataset.skill;
+    const res = await fetch(`/api/runs/${encodeURIComponent(runId)}/human-review`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ skill, decision: b.dataset.d }) });
+    const r = await res.json();
+    if (!res.ok) return alert(r.error);
+    onEvent({ type: "human_review", t: 0, ...r });
+  }));
 }
 
 function onEvent(e) {
   switch (e.type) {
+    case "replay_info":
+      $("replay").textContent = `${e.compressedGapMs ? "TIME-COMPRESSED " : ""}REPLAY OF REAL RUN ${e.runId}${e.compressedGapMs ? " · TIMESTAMPS ARE REAL" : ""}`;
+      break;
     case "run_started":
-      if (e.replayOf) $("replay").textContent = `REPLAY OF REAL RUN ${e.replayOf}`;
-      $("status").textContent = e.replayOf ? "REPLAY" : "LIVE"; $("status").className = "pill live";
+      runId = e.runId;
+      if (!e.replayOf) { $("status").textContent = "LIVE"; } else { $("status").textContent = "REPLAY"; }
+      $("status").className = "pill live";
       log(e.t, "Brief received");
       core("BRIEF", "Reading brief", 0);
       break;
@@ -213,60 +261,86 @@ function onEvent(e) {
     case "jev_decision": {
       if (e.kind === "next_skill") {
         const a = e.answers.next_skill;
-        core(a.decision === "DONE" ? "DONE" : `→ ${a.decision}`, decisionMeta(a, e), a.confidence);
-        if (a.decision !== "DONE") select(a.decision);
+        core(`→ ${a.decision}`, decisionMeta(a, e), a.confidence);
+        select(a.decision);
         log(e.t, `JEV → ${a.decision}`, "jev", decisionMeta(a, e));
       } else if (e.kind === "review") {
-        const { quality, acceptable, action } = e.answers;
-        const q = Math.round((quality.decision / 4) * 100);
-        core(action.decision.replace("_", " "), `quality ${q}/100 · ${e.latencyMs} ms<br>${esc(e.model)}`, action.confidence);
+        const { review_action: action, quality_score: q, acceptable } = e.answers;
+        core(action.decision.replace("_", " "), `quality ${q100(q.decision)}/100 · acceptable ${acceptable.decision ? "yes" : "no"}<br>${e.latencyMs} ms · ${esc(e.model)}`, action.confidence);
         log(e.t, `JEV review ${e.skill} v${e.version} → ${action.decision}`, "jev",
-          `quality ${q}/100 · acceptable ${acceptable.decision ? "yes" : "no"} ${pct(acceptable.confidence)} · ${decisionMeta(action, e)}`);
+          `${decisionMeta(action, e)}<br>evidence: quality ${q100(q.decision)}/100 (${pct(q.confidence)}) · acceptable ${acceptable.decision ? "yes" : "no"} (${pct(acceptable.confidence)})`);
       } else {
         const a = e.answers.worth_it;
         log(e.t, `JEV cost guard ${e.skill} → ${a.decision ? "WORTH IT" : "NOT WORTH IT"}`, "jev", decisionMeta(a, e));
       }
       break;
     }
+    case "only_option":
+      select(e.skill);
+      core(`→ ${e.skill}`, "only remaining skill · no JEV call needed", 0);
+      log(e.t, `${e.skill} is the only remaining skill`, "", "no decision to make · no JEV call");
+      break;
     case "skill_started":
       select(e.skill);
       setNode(e.skill, "running", `RUNNING v${e.version}`);
-      log(e.t, `${e.skill} running${e.version > 1 ? ` (retry, v${e.version})` : ""}`);
+      if (!COMPRESS) startTimer(e.skill, 0);
+      log(e.t, `${e.skill} running${e.version > 1 ? ` (retry, v${e.version})` : ""}`, "", esc(e.engine));
       break;
-    case "skill_completed":
-      setNode(e.skill, "running", `v${e.version} DONE`);
-      tile(e.skill, e.asset, e.evidence);
-      log(e.t, `${e.skill} completed → ${e.asset.file.split("/").pop()}`);
+    case "skill_completed": {
+      stopTimer();
+      const ev = e.asset.evidence, v = ev.validation;
+      setNode(e.skill, "running", `v${e.version} OUTPUT READY`);
+      tile(e.skill, e.asset);
+      const bits = [ev.files?.[0] && `${Math.round(ev.files[0].bytes / 1024)} KB`, ev.dimensions && `${ev.dimensions.width}×${ev.dimensions.height}`,
+        ev.duration?.animationMs && `${Math.round(ev.duration.animationMs / 100) / 10}s`, v && `${v.passed}/${v.passed + v.failed} checks`,
+        ev.generator?.durationMs && `${Math.round(ev.generator.durationMs / 1000)}s ${esc(ev.generator.model ?? "")}`].filter(Boolean);
+      log(e.t, `${e.skill} output → ${esc(e.asset.file.split("/").pop())}`, v?.failed ? "retry" : "", bits.join(" · "));
+      break;
+    }
+    case "skill_failed":
+      stopTimer();
+      setNode(e.skill, "HUMAN_REVIEW", "FAILED → HUMAN");
+      log(e.t, `${e.skill} execution failed`, "bad", esc(e.error.message));
       break;
     case "review_outcome": {
       const cls = { APPROVED: "ok", RETRY: "retry", HUMAN_REVIEW: "human" }[e.outcome];
       setNode(e.skill, e.outcome, `${e.outcome.replace("_", " ")} · ${e.qualityPercent}`);
       tileStatus(e.skill, e.outcome, e.qualityPercent, e.version);
-      log(e.t, e.outcome === "RETRY" ? `${e.skill} → RETRY` : `${e.skill} ${e.outcome.replace("_", " ")}`, cls, esc(e.reason));
+      log(e.t, `${e.skill} → ${e.outcome.replace("_", " ")}`, cls, esc(e.reason));
       break;
     }
     case "skill_not_connected":
       setNode(e.skill, "NOT_CONNECTED", "NOT CONNECTED");
-      log(e.t, `${e.skill} NOT CONNECTED — skipped`, "bad", "no provider configured · nothing executed");
+      log(e.t, `${e.skill} NOT CONNECTED — excluded`, "bad", "no provider configured · never executed");
       break;
     case "guard":
       if (e.skill) setNode(e.skill, "HUMAN_REVIEW", "HUMAN REVIEW");
       log(e.t, `Guard${e.skill ? " · " + e.skill : ""}: ${esc(e.reason)}`, "human");
       break;
     case "error":
+      stopTimer();
       core("JEV ERROR", esc(`${e.error.name}${e.error.status ? " " + e.error.status : ""}`), 0, "err");
       log(e.t, `Error: ${esc(e.error.name)}`, "bad", esc(e.error.message));
       break;
+    case "human_review":
+      setNode(e.skill, e.decision === "approve" ? "APPROVED" : "NOT_CONNECTED", e.decision === "approve" ? "APPROVED BY HUMAN" : "REJECTED BY HUMAN");
+      tileStatus(e.skill, e.decision === "approve" ? "APPROVED" : "REJECTED", null, "");
+      log(e.t || 0, `Human ${e.decision === "approve" ? "approved" : "rejected"} ${e.skill}`, e.decision === "approve" ? "ok" : "bad", `run status → ${e.status}`);
+      document.querySelector(`.hr[data-skill="${e.skill}"]`)?.remove();
+      showStatus(e.status);
+      if (e.status === "DONE") core("DONE", "all connected skills approved", 1);
+      break;
     case "run_finished": {
+      stopTimer();
       select(null);
       const ok = e.status === "DONE";
-      $("status").textContent = e.status.replace(/_/g, " "); $("status").className = "pill " + (ok ? "ok" : "bad");
+      showStatus(e.status);
       if (e.status !== "FAILED") core(ok ? "DONE" : e.status.replace(/_/g, " "), `${e.jevCalls} JEV decisions`, 1);
-      log(e.t, `${e.status.replace(/_/g, " ")}`, "done " + (ok ? "ok" : "bad"));
+      log(e.t, `${e.status.replace(/_/g, " ")}`, "done " + (ok ? "ok" : e.status === "AWAITING_HUMAN_REVIEW" ? "human" : "bad"));
       $("final").innerHTML = `<span>STATUS <b>${e.status}</b></span><span>JEV CALLS <b>${e.jevCalls}</b></span>
         <span>JEV LATENCY <b>${e.jevLatencyMs} ms</b></span><span>MODEL <b>${esc(e.models.join(", ") || "—")}</b></span>
-        <span>STEPS <b>${e.steps}</b></span><span class="pace">timeline includes a display pace between steps; latencies are measured per API call</span>`;
-      document.body.dataset.status = e.status;
+        <span>STEPS <b>${e.steps}/${e.maxSteps}</b></span><span class="pace">latency = JEV API call only · timeline = real elapsed time</span>`;
+      if (REPLAY === null && e.status === "AWAITING_HUMAN_REVIEW") humanPanel(e);
       document.body.dataset.state = "finished";
       $("run").disabled = false;
       requestAnimationFrame(() => { $("tl").scrollTop = $("tl").scrollHeight; });
@@ -278,7 +352,10 @@ function onEvent(e) {
 function start() {
   $("run").disabled = true;
   document.body.dataset.state = "running";
-  const src = new EventSource(REPLAY !== null ? `/api/replay${REPLAY ? "?run=" + encodeURIComponent(REPLAY) : ""}` : "/api/run");
+  const q = new URLSearchParams();
+  if (REPLAY) q.set("run", REPLAY);
+  if (COMPRESS) q.set("compress", COMPRESS);
+  const src = new EventSource(REPLAY !== null ? `/api/replay?${q}` : "/api/run");
   src.onmessage = (m) => onEvent(JSON.parse(m.data));
   src.onerror = () => {
     src.close();
@@ -287,7 +364,6 @@ function start() {
       document.body.dataset.status = "STREAM_ERROR";
       document.body.dataset.state = "finished";
       $("run").disabled = false;
-      requestAnimationFrame(() => { $("tl").scrollTop = $("tl").scrollHeight; });
     }
   };
 }
