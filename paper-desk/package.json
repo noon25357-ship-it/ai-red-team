@@ -1,0 +1,22 @@
+{
+  "name": "jev-paper-desk",
+  "private": true,
+  "type": "module",
+  "description": "Paper-trading desk: market scanner, six agents, risk engine, and JEV as the final decision layer. Paper only: no exchange execution.",
+  "scripts": {
+    "start": "node --env-file-if-exists=../.env src/server.mjs",
+    "demo": "node --env-file-if-exists=../.env src/server.mjs --open-demo",
+    "test": "node --test test/*.test.mjs",
+    "record-demo": "node --env-file-if-exists=../.env scripts/record-demo.mjs",
+    "jev:status": "node --env-file-if-exists=../.env scripts/jev-status.mjs"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1",
+    "@fontsource/chakra-petch": "^5.0.0",
+    "@fontsource/ibm-plex-sans": "^5.0.0",
+    "@fontsource/jetbrains-mono": "^5.0.0"
+  }
+}

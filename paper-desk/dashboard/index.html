@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JEV Paper Desk</title>
+<style>
+@font-face{font-family:"Chakra Petch";font-weight:500;src:url(/fonts/chakra-petch-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Chakra Petch";font-weight:600;src:url(/fonts/chakra-petch-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Chakra Petch";font-weight:700;src:url(/fonts/chakra-petch-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:400;src:url(/fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;src:url(/fonts/ibm-plex-sans-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;src:url(/fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:400;src:url(/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:500;src:url(/fonts/jetbrains-mono-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:700;src:url(/fonts/jetbrains-mono-latin-700-normal.woff2) format("woff2")}
+:root{
+  --bg:#0A0E13; --panel:#0F151C; --panel2:#121A23; --line:#1C2632; --line2:#26323F;
+  --text:#D6DEE6; --mute:#6B7886; --dim:#45515E;
+  --up:#2BD9A5; --down:#FF5D6C; --amber:#F2B544; --path:#7C8CFF; --path2:#AEB7FF;
+  --display:"Chakra Petch",ui-sans-serif,sans-serif; --body:"IBM Plex Sans",ui-sans-serif,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:13px/1.35 var(--body);height:100%}
+body{background:radial-gradient(900px 500px at 50% 42%,#101a2a 0%,var(--bg) 70%);overflow:hidden}
+.app{display:grid;grid-template-rows:56px 72px 1fr;gap:10px;height:100vh;padding:10px 14px 12px}
+button,select{font:inherit}
+:focus-visible{outline:2px solid var(--path);outline-offset:2px}
+/* header */
+header{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;border-bottom:1px solid var(--line);padding-bottom:8px}
+.brand{font:700 20px/1 var(--display);letter-spacing:.14em;white-space:nowrap}
+.brand b{color:var(--path2);font-weight:700}
+.brand small{display:block;font:500 10px/1.6 var(--display);letter-spacing:.3em;color:var(--mute)}
+.badges{display:flex;gap:6px;flex-wrap:nowrap}
+.badge{font:600 10.5px/1 var(--display);letter-spacing:.12em;padding:7px 9px;border-radius:4px;border:1px solid var(--line2);color:var(--mute);white-space:nowrap}
+.badge.amber{color:var(--amber);border-color:#f2b54466;background:#f2b54410}
+.badge.nc{color:var(--amber);border:1px dashed #f2b544aa;background:#f2b5440c}
+.badge.safe{color:var(--up);border-color:#2bd9a555}
+.badge.ok{color:var(--up);border-color:var(--up)}
+.clock{margin-left:auto;text-align:right;font:500 11px/1.3 var(--mono);color:var(--mute);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clock b{display:block;color:var(--text);font:600 15px/1.2 var(--mono)}
+.controls{display:flex;gap:6px;align-items:center}
+.btn{white-space:nowrap;border:1px solid var(--line2);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:5px;cursor:pointer;font:600 11px/1 var(--display);letter-spacing:.14em}
+.btn:hover{border-color:var(--path)}
+.btn.primary{background:linear-gradient(180deg,#8f9cff,#6f7ff4);border-color:#aeb7ff;color:#070a18;box-shadow:0 0 24px #7c8cff55}
+.btn:disabled{opacity:.4;cursor:default}
+select{max-width:150px;background:var(--panel2);color:var(--text);border:1px solid var(--line2);border-radius:5px;padding:7px 6px;font-size:11px}
+/* KPI rail */
+.kpis{display:grid;grid-template-columns:1.6fr repeat(7,1fr);gap:8px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 12px;min-width:0}
+.kpi .k{font:600 10px/1 var(--display);letter-spacing:.2em;color:var(--mute)}
+.kpi .v{font:600 22px/1.25 var(--mono);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.kpi.big .v{font-size:28px}
+.kpi .s{font:11px var(--mono);color:var(--mute)}
+.up{color:var(--up)}.down{color:var(--down)}.amb{color:var(--amber)}
+/* main grid */
+main{display:grid;grid-template-columns:320px 1fr 370px;gap:10px;min-height:0}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;min-height:0;display:flex;flex-direction:column}
+.ph{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font:600 10.5px/1 var(--display);letter-spacing:.2em;color:var(--mute)}
+.ph .r{margin-left:auto;font:500 10.5px var(--mono);letter-spacing:0;color:var(--dim)}
+.pb{padding:8px 12px;min-height:0;overflow:hidden}
+/* scanner */
+.srow{display:grid;grid-template-columns:78px 1fr 64px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #16202b}
+.srow:last-child{border:0}
+.srow .sym{font:600 12.5px var(--display);letter-spacing:.06em}
+.srow .px{font:500 12px var(--mono);font-variant-numeric:tabular-nums}
+.srow .meta{font:10.5px var(--mono);color:var(--mute)}
+.srow canvas{width:100%;height:30px;display:block}
+.score{height:4px;background:#1a2430;border-radius:2px;margin-top:4px;overflow:hidden}
+.score i{display:block;height:100%;background:var(--path);transition:width .3s}
+.srow.pick{background:linear-gradient(90deg,#7c8cff1c,transparent)}
+.srow.pick .sym{color:var(--path2)}
+/* jev filter + risk */
+.nc-box{border:1px dashed #f2b54488;border-radius:5px;padding:9px 10px;background:#f2b5440a}
+.nc-box .t{font:700 12px var(--display);letter-spacing:.16em;color:var(--amber)}
+.nc-box ul{margin:6px 0 0;padding-left:16px;color:var(--mute);font-size:11.5px}
+.kv{display:flex;justify-content:space-between;gap:8px;font:11.5px var(--mono);padding:3px 0;color:var(--mute)}
+.kv b{color:var(--text);font-weight:500;text-align:right}
+.meter{height:8px;background:#1a2430;border-radius:4px;position:relative;margin:6px 0 2px;overflow:hidden}
+.meter i{position:absolute;top:0;bottom:0;border-radius:4px}
+.halt{display:none;margin-top:6px;padding:7px 9px;border:1px solid var(--down);color:var(--down);border-radius:5px;font:700 11px var(--display);letter-spacing:.14em}
+.halt.on{display:block}
+.ra{font:11px var(--mono);color:var(--mute);margin-top:6px;max-height:120px;overflow:hidden}
+/* center */
+.chart-wrap{position:relative;flex:1 1 200px;min-height:180px}
+.chart-wrap canvas{width:100%;height:100%;display:block}
+.chart-title{position:absolute;left:12px;top:36px;font:700 22px var(--display);letter-spacing:.06em;pointer-events:none}
+.chart-title span{font:500 14px var(--mono);color:var(--mute);margin-left:8px}
+.core{flex:0 0 auto;padding:10px 14px 10px}
+.flow{position:relative;height:84px}
+.flow svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.node{position:absolute;top:22px;transform:translateX(-50%);min-width:104px;padding:9px 10px;text-align:center;border:1px solid var(--line2);border-radius:6px;background:var(--panel2);font:700 11.5px var(--display);letter-spacing:.16em;transition:border-color .2s,box-shadow .2s}
+.node small{display:block;font:500 9.5px var(--mono);letter-spacing:0;color:var(--mute);margin-top:3px}
+.node.lit{border-color:var(--path);box-shadow:0 0 22px #7c8cff66}
+.node.jev{border:1px dashed var(--amber);color:var(--amber);background:#f2b5440a}
+.node.jev.ok{border:1px solid var(--up);color:var(--up)}
+.gate{position:absolute;top:0;transform:translateX(-50%);font:600 9.5px var(--display);letter-spacing:.2em;color:var(--path2);white-space:nowrap}
+.decision{display:grid;grid-template-columns:250px 1fr;gap:16px;align-items:center;margin-top:4px;border-top:1px solid var(--line);padding-top:10px}
+.dword{font:700 30px/1 var(--display);letter-spacing:.08em;min-width:0}
+.dword small{display:block;font:600 10px var(--display);letter-spacing:.2em;color:var(--mute);margin-top:6px}
+.dword .src{color:var(--amber)}
+.dgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.dgrid div{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:6px 8px;min-width:0}
+.dgrid span{display:block;font:600 9.5px var(--display);letter-spacing:.18em;color:var(--mute)}
+.dgrid b{display:block;font:500 12.5px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.objections{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;min-height:22px}
+.chip{font:500 10.5px var(--mono);padding:3px 7px;border-radius:3px;border:1px solid var(--line2);color:var(--mute);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.chip.bad{color:var(--down);border-color:#ff5d6c66}.chip.warn{color:var(--amber);border-color:#f2b54466}
+/* agents */
+.agents{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:8px;flex:0 0 auto}
+.agent{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 10px;display:flex;flex-direction:column;gap:2px;min-width:0;transition:border-color .2s,box-shadow .2s}
+.agent.run{border-color:var(--path);box-shadow:0 0 18px #7c8cff44}
+.agent .top{display:flex;align-items:center;gap:8px}
+.agent .nm{font:700 14px var(--display);letter-spacing:.16em}
+.agent .role{display:none;font:10.5px var(--body);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.agent.run .dot{background:var(--path);box-shadow:0 0 8px var(--path)}
+.agent.done .dot{background:var(--up)}
+.agent .vd{white-space:nowrap;flex:none;margin-left:auto;font:700 10.5px var(--display);letter-spacing:.14em;padding:3px 6px;border-radius:3px;border:1px solid var(--line2);color:var(--mute)}
+.vd.g{color:var(--up);border-color:#2bd9a566}.vd.r{color:var(--down);border-color:#ff5d6c66}.vd.a{color:var(--amber);border-color:#f2b54466}.vd.b{color:var(--path2);border-color:#7c8cff66}
+.agent .sum{font:11px/1.35 var(--mono);color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:29px}
+.agent .io{font:10px/1.35 var(--mono);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent .lat{display:flex;gap:10px;font:10px var(--mono);color:var(--dim);margin-top:auto}
+.agent .note{font:9.5px var(--mono);color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* right */
+.eq-wrap{flex:0 0 200px;position:relative}
+.eq-wrap canvas{width:100%;height:100%;display:block}
+table{width:100%;border-collapse:collapse;font:11px var(--mono);font-variant-numeric:tabular-nums}
+th{font:600 9.5px var(--display);letter-spacing:.16em;color:var(--mute);text-align:left;padding:4px 4px;border-bottom:1px solid var(--line)}
+td{padding:4px 4px;border-bottom:1px solid #16202b;white-space:nowrap}
+td.n,th.n{text-align:right}
+.empty{color:var(--dim);font:11px var(--mono);padding:8px 0}
+.tape{font:11px var(--mono);overflow:hidden}
+.tape div{display:grid;grid-template-columns:44px 72px 40px 1fr;gap:6px;padding:3px 0;border-bottom:1px solid #16202b;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(-4px)}}
+.flash{animation:flash .6s ease}
+@keyframes flash{0%{background:#7c8cff33}100%{background:transparent}}
+.toast{position:fixed;left:50%;top:176px;transform:translateX(-50%);padding:10px 16px;border-radius:6px;font:700 13px var(--display);letter-spacing:.14em;background:var(--panel2);border:1px solid var(--line2);opacity:0;transition:opacity .3s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:1100px){body{overflow:auto}.app{height:auto}main{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}header{flex-wrap:wrap}.clock{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><b>JEV</b> PAPER DESK<small>simulated money only</small></div>
+    <div class="badges">
+      <span class="badge amber" id="dataMode">DATA MODE: REPLAY</span>
+      <span class="badge nc" id="jevBadge" title="">JEV: CHECKING…</span>
+      <span class="badge safe">PAPER ONLY</span>
+    </div>
+    <div class="clock"><b id="clock">--</b><span id="dsTitle">real Binance history</span></div>
+    <div class="controls">
+      <button class="btn primary" id="demoBtn">RUN DEMO</button>
+      <select id="dsSel" aria-label="Replay dataset"></select>
+      <select id="speedSel" aria-label="Replay speed"><option value="4">4 candles/s</option><option value="12" selected>12 candles/s</option><option value="40">40 candles/s</option><option value="150">150 candles/s</option></select>
+      <button class="btn" id="replayBtn">REPLAY</button>
+      <button class="btn" id="stopBtn" disabled>STOP</button>
+    </div>
+  </header>
+
+  <section class="kpis">
+    <div class="kpi big"><div class="k">BALANCE (EQUITY)</div><div class="v" id="kBal">--</div><div class="s" id="kCash">cash --</div></div>
+    <div class="kpi"><div class="k">DAY PNL</div><div class="v" id="kDay">--</div><div class="s" id="kDayPct">--</div></div>
+    <div class="kpi"><div class="k">ROI</div><div class="v" id="kRoi">--</div><div class="s">since session start</div></div>
+    <div class="kpi"><div class="k">WIN RATE</div><div class="v" id="kWin">--</div><div class="s" id="kWL">0W · 0L</div></div>
+    <div class="kpi"><div class="k">MAX DRAWDOWN</div><div class="v" id="kDD">--</div><div class="s">peak to trough</div></div>
+    <div class="kpi"><div class="k">TRADES</div><div class="v" id="kTrades">0</div><div class="s" id="kPF">profit factor --</div></div>
+    <div class="kpi"><div class="k">OPEN</div><div class="v" id="kOpen">0</div><div class="s" id="kPend">0 pending</div></div>
+    <div class="kpi"><div class="k">DECISIONS</div><div class="v" id="kDec">0</div><div class="s" id="kDecMix">--</div></div>
+  </section>
+
+  <main>
+    <div class="col">
+      <section class="panel" style="flex:0 1 auto;max-height:44%"><div class="ph">MARKET SCANNER<span class="r" id="scanNote">rule score 0-100</span></div><div class="pb" id="scanner" style="overflow-y:auto"><div class="empty">Press RUN DEMO to start the replay.</div></div></section>
+      <section class="panel"><div class="ph">JEV FILTER</div><div class="pb" id="jevPanel"></div></section>
+      <section class="panel" style="flex:1 1 auto"><div class="ph">RISK ENGINE<span class="r">limits enforced every candle</span></div><div class="pb">
+        <div class="kv"><span>Day PnL vs −3% halt</span><b id="rDay">--</b></div>
+        <div class="meter"><i id="rMeter" style="left:50%;width:0"></i><i style="left:calc(50% - 1px);width:2px;background:var(--dim)"></i></div>
+        <div class="kv"><span>Exposure (≤ 10% each)</span><b id="rExp">--</b></div>
+        <div class="kv"><span>Slots used</span><b id="rSlots">--</b></div>
+        <div class="kv"><span>Risk per trade</span><b>1% of equity</b></div>
+        <div class="halt" id="halt">DESK HALTED · DAILY LOSS LIMIT</div>
+        <div class="ra" id="riskActions"></div>
+      </div></section>
+    </div>
+
+    <div class="col">
+      <section class="panel chart-wrap"><div class="ph">PRICE · 5M<span class="r" id="chartNote">entry · stop · target</span></div><canvas id="chart"></canvas><div class="chart-title" id="chartTitle"></div></section>
+      <section class="panel core">
+        <div class="ph" style="margin:-10px -14px 8px;border-bottom:1px solid var(--line)">JEV / EXECUTION CORE<span class="r" id="cycleNote">decision cycle every 15 min of market time</span></div>
+        <div class="flow" id="flow">
+          <svg id="flowSvg" aria-hidden="true"></svg>
+          <div class="node" data-n="MARKET" style="left:9%">MARKET<small id="nMarket">scanner</small></div>
+          <div class="node jev" data-n="JEV" style="left:30%" id="nodeJev">JEV<small id="nJev">NOT CONNECTED</small></div>
+          <div class="gate" id="gateLabel" style="left:30%">RULES GATE · decides while JEV is offline</div>
+          <div class="node" data-n="AGENTS" style="left:51%">AGENTS<small id="nAgents">6 agents</small></div>
+          <div class="node" data-n="RISK" style="left:71%">RISK<small id="nRisk">veto · SL/TP</small></div>
+          <div class="node" data-n="ORDER" style="left:91%">PAPER ORDER<small id="nOrder">local ledger</small></div>
+        </div>
+        <div class="decision">
+          <div class="dword" id="dWord">—<small>final decision · <span class="src" id="dSrc">waiting</span></small></div>
+          <div class="dgrid">
+            <div><span>ENTRY</span><b id="dEntry">--</b></div>
+            <div><span>STOP LOSS</span><b id="dStop" class="down">--</b></div>
+            <div><span>TAKE PROFIT</span><b id="dTp" class="up">--</b></div>
+            <div><span id="dSizeL">SIZE</span><b id="dSize">--</b></div>
+            <div><span>JEV CONFIDENCE</span><b id="dConf" class="amb" style="font-size:10.5px">NOT CONNECTED</b></div>
+            <div class="objections" id="dObj"></div>
+          </div>
+        </div>
+      </section>
+      <section class="agents" id="agents"></section>
+    </div>
+
+    <div class="col">
+      <section class="panel eq-wrap"><div class="ph">EQUITY CURVE<span class="r" id="eqNote">--</span></div><canvas id="equity"></canvas></section>
+      <section class="panel" style="flex:0 0 auto"><div class="ph">OPEN POSITIONS</div><div class="pb" id="positions"><div class="empty">No open positions.</div></div></section>
+      <section class="panel" style="flex:1 1 0"><div class="ph">TRADE HISTORY<span class="r" id="histNote"></span></div><div class="pb" id="history"><div class="empty">No closed trades yet.</div></div></section>
+      <section class="panel" style="flex:0 0 150px"><div class="ph">DECISION LOG</div><div class="pb tape" id="tape"></div></section>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const S = { quote: "USDT", start: 1000, candles: {}, focus: null, trades: [], equity: [], decisions: 0, mix: {}, positions: [], pending: [], lastScan: [], pick: null, running: false, dirty: true };
+const AGENT_NAMES = ["TAPE", "PRICE", "WIRE", "SIZE", "EXEC", "RISK"];
+const VERDICT_CLASS = { BULLISH: "g", ENTER: "g", CLEAR: "g", SIZED: "b", PAPER_ORDER: "b", APPROVE: "g", PULLBACK: "a", NEUTRAL: "a", CAUTION: "a", BEARISH: "r", BLOCK: "r", VETO: "r", ZERO: "r" };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+// Number formats follow the account's quote currency (USDT → $, BTC → ₿ with 8 decimals).
+const money = (v, sign = false) => {
+  if (v == null || !isFinite(v)) return "--";
+  const s = sign && v > 0 ? "+" : v < 0 ? "−" : "";
+  const a = Math.abs(v);
+  return S.quote === "BTC" ? `${s}₿${a.toFixed(5)}` : `${s}$${a.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+const px = (v) => v == null ? "--" : v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 2 }) : v >= 1 ? v.toFixed(4) : v.toPrecision(5);
+const pct = (v, sign = true) => v == null || !isFinite(v) ? "--" : `${sign && v > 0 ? "+" : ""}${v.toFixed(2)}%`;
+const cls = (v) => v > 0 ? "up" : v < 0 ? "down" : "";
+const hhmm = (t) => new Date(t * 1000).toISOString().slice(11, 16);
+const stamp = (t) => new Date(t * 1000).toISOString().replace("T", " ").slice(0, 16) + " UTC";
+
+function toast(text, color) {
+  const el = $("toast");
+  el.textContent = text; el.style.color = color; el.style.borderColor = color;
+  el.classList.add("on"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 1400);
+}
+
+/* ---------- agents ---------- */
+function buildAgents(list) {
+  $("agents").innerHTML = list.map((a) => `
+    <div class="agent" id="ag-${a.name}" title="${esc(a.role)}">
+      <div class="top"><span class="dot"></span><span class="nm">${a.name}</span><span class="role2" style="font:10px var(--body);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.role)}</span><span class="vd" id="agv-${a.name}">IDLE</span></div>
+      <div class="role">${esc(a.role)}</div>
+      <div class="sum" id="ags-${a.name}">Waiting for a candidate.</div>
+      <div class="io" id="agi-${a.name}">in: —</div>
+      <div class="io" id="ago-${a.name}">out: —</div>
+      ${a.partial ? `<div class="note">${esc(a.partial)}</div>` : ""}
+      <div class="lat"><span id="agl-${a.name}">latency —</span><span id="agc-${a.name}">rules agent</span></div>
+    </div>`).join("");
+}
+const brief = (o) => Object.entries(o ?? {}).filter(([, v]) => typeof v !== "object" || v === null).slice(0, 4)
+  .map(([k, v]) => `${k}=${typeof v === "number" ? (Math.abs(v) >= 100 ? v.toFixed(2) : +v.toPrecision(4)) : v}`).join(" ");
+
+/* ---------- flow circuit ---------- */
+function drawFlow(active) {
+  const svg = $("flowSvg"), w = $("flow").clientWidth, y = 40;
+  const x = (p) => (p / 100) * w;
+  const jevOk = S.jevOk;
+  const seg = (a, b, on, dash) => `<line x1="${x(a) + 52}" y1="${y}" x2="${x(b) - 52}" y2="${y}" stroke="${on ? "#7C8CFF" : "#26323F"}" stroke-width="${on ? 2.5 : 1.5}" ${dash ? 'stroke-dasharray="4 5"' : ""}/>`;
+  // When JEV is offline the path breaks at JEV and a bypass lane (RULES GATE) arcs over it.
+  const bypass = jevOk ? "" : `<path d="M ${x(9) + 52} ${y - 6} C ${x(18)} ${y - 36}, ${x(42)} ${y - 36}, ${x(51) - 52} ${y - 6}" fill="none" stroke="${active >= 1 ? "#7C8CFF" : "#26323F"}" stroke-width="${active >= 1 ? 2.5 : 1.5}"/>`;
+  svg.innerHTML = `${jevOk ? seg(9, 30, active >= 1) + seg(30, 51, active >= 1) : seg(9, 30, false, true) + seg(30, 51, false, true)}${bypass}${seg(51, 71, active >= 2)}${seg(71, 91, active >= 3)}
+    <circle id="pulse" r="5" fill="#AEB7FF" opacity="0"><animate attributeName="opacity" values="0;1;1;0" dur="0.7s" begin="indefinite"/></circle>`;
+  $("gateLabel").style.display = jevOk ? "none" : "";
+  document.querySelectorAll(".node").forEach((n) => n.classList.toggle("lit", { MARKET: active >= 0, AGENTS: active >= 1, RISK: active >= 2, ORDER: active >= 3 }[n.dataset.n] && active >= 0 && n.dataset.n !== "JEV"));
+}
+let flowStage = -1;
+function setFlow(stage) { flowStage = stage; drawFlow(stage); }
+
+/* ---------- canvas helpers ---------- */
+function fit(canvas) {
+  const r = canvas.getBoundingClientRect(), d = devicePixelRatio || 1;
+  if (canvas.width !== Math.round(r.width * d) || canvas.height !== Math.round(r.height * d)) { canvas.width = Math.round(r.width * d); canvas.height = Math.round(r.height * d); }
+  const c = canvas.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0);
+  return { c, w: r.width, h: r.height };
+}
+function spark(canvas, vals, up) {
+  const { c, w, h } = fit(canvas);
+  c.clearRect(0, 0, w, h);
+  if (!vals?.length) return;
+  const mn = Math.min(...vals), mx = Math.max(...vals), sx = w / (vals.length - 1), sy = (v) => h - 2 - ((v - mn) / (mx - mn || 1)) * (h - 4);
+  c.beginPath(); vals.forEach((v, i) => (i ? c.lineTo(i * sx, sy(v)) : c.moveTo(0, sy(v))));
+  c.strokeStyle = up ? "#2BD9A5" : "#FF5D6C"; c.lineWidth = 1.4; c.stroke();
+}
+
+function drawChart() {
+  const cv = $("chart"); const { c, w, h } = fit(cv);
+  c.clearRect(0, 0, w, h);
+  const sym = S.focus; const all = S.candles[sym];
+  if (!all?.length) return;
+  const top = 36, bottom = h - 20, right = w - 64;
+  const bars = all.slice(-110), n = bars.length, bw = right / 110;
+  const pos = S.positions.find((p) => p.symbol === sym), ord = S.pending.find((o) => o.symbol === sym);
+  const levels = [pos?.stop, pos?.takeProfit, pos?.entry, ord?.price, ord?.stop, ord?.takeProfit].filter((v) => v != null);
+  let mn = Math.min(...bars.map((b) => b.l), ...levels), mx = Math.max(...bars.map((b) => b.h), ...levels);
+  const pad = (mx - mn) * 0.08; mn -= pad; mx += pad;
+  const Y = (v) => top + (1 - (v - mn) / (mx - mn)) * (bottom - top);
+  // grid
+  c.strokeStyle = "#16202b"; c.lineWidth = 1; c.font = "10px JetBrains Mono"; c.fillStyle = "#45515E";
+  for (let k = 0; k <= 4; k++) { const v = mn + ((mx - mn) * k) / 4, y = Y(v); c.beginPath(); c.moveTo(0, y); c.lineTo(right, y); c.stroke(); c.fillText(px(v), right + 6, y + 3); }
+  // candles
+  bars.forEach((b, i) => {
+    const x = (110 - n + i) * bw + bw / 2, upc = b.c >= b.o;
+    c.strokeStyle = c.fillStyle = upc ? "#2BD9A5" : "#FF5D6C";
+    c.beginPath(); c.moveTo(x, Y(b.h)); c.lineTo(x, Y(b.l)); c.stroke();
+    const y1 = Y(Math.max(b.o, b.c)), y2 = Y(Math.min(b.o, b.c));
+    c.fillRect(x - bw * 0.32, y1, bw * 0.64, Math.max(1, y2 - y1));
+  });
+  // trade markers from history on this symbol
+  const first = bars[0].t;
+  for (const t of S.trades.filter((t) => t.symbol === sym && t.exitT >= first)) {
+    const xi = (tt) => (110 - n + bars.findIndex((b) => b.t >= tt)) * bw + bw / 2;
+    if (t.entryT >= first) { c.fillStyle = "#AEB7FF"; const x = xi(t.entryT), y = Y(t.entry); c.beginPath(); c.moveTo(x, y + 9); c.lineTo(x - 5, y + 17); c.lineTo(x + 5, y + 17); c.fill(); }
+    c.fillStyle = t.pnl > 0 ? "#2BD9A5" : "#FF5D6C"; c.beginPath(); c.arc(xi(t.exitT), Y(t.exit), 4, 0, 7); c.fill();
+  }
+  const line = (v, col, label, dash) => {
+    if (v == null) return; const y = Y(v);
+    c.setLineDash(dash ? [5, 4] : []); c.strokeStyle = col; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, y); c.lineTo(right, y); c.stroke(); c.setLineDash([]);
+    c.fillStyle = col; c.fillRect(right, y - 8, 64, 16); c.fillStyle = "#0A0E13"; c.font = "600 10px JetBrains Mono"; c.fillText(label, right + 4, y + 3.5);
+  };
+  if (pos) { line(pos.takeProfit, "#2BD9A5", "TP " + px(pos.takeProfit)); line(pos.entry, "#AEB7FF", "IN " + px(pos.entry)); line(pos.stop, "#FF5D6C", "SL " + px(pos.stop)); }
+  else if (ord) { line(ord.takeProfit, "#2BD9A5", "TP " + px(ord.takeProfit), true); line(ord.price, "#AEB7FF", "LMT " + px(ord.price), true); line(ord.stop, "#FF5D6C", "SL " + px(ord.stop), true); }
+  const last = bars.at(-1); const y = Y(last.c);
+  c.fillStyle = "#D6DEE6"; c.fillRect(right, y - 8, 64, 16); c.fillStyle = "#0A0E13"; c.font = "600 10px JetBrains Mono"; c.fillText(px(last.c), right + 4, y + 3.5);
+}
+
+function drawEquity() {
+  const cv = $("equity"); const { c, w, h } = fit(cv);
+  c.clearRect(0, 0, w, h);
+  const pts = S.equity; if (pts.length < 2) return;
+  const top = 38, bottom = h - 14, left = 8, right = w - 8;
+  const vals = pts.map((p) => p.equity);
+  let mn = Math.min(...vals, S.start), mx = Math.max(...vals, S.start); const pad = (mx - mn) * 0.15 || S.start * 0.002; mn -= pad; mx += pad;
+  const X = (i) => left + (i / (pts.length - 1)) * (right - left), Y = (v) => top + (1 - (v - mn) / (mx - mn)) * (bottom - top);
+  const base = Y(S.start);
+  c.setLineDash([3, 4]); c.strokeStyle = "#26323F"; c.beginPath(); c.moveTo(left, base); c.lineTo(right, base); c.stroke(); c.setLineDash([]);
+  c.fillStyle = "#45515E"; c.font = "10px JetBrains Mono"; c.fillText("start " + money(S.start), left + 2, base - 5);
+  const last = vals.at(-1), col = last >= S.start ? "#2BD9A5" : "#FF5D6C";
+  const g = c.createLinearGradient(0, top, 0, bottom); g.addColorStop(0, col + "44"); g.addColorStop(1, col + "00");
+  c.beginPath(); vals.forEach((v, i) => (i ? c.lineTo(X(i), Y(v)) : c.moveTo(X(i), Y(v)))); c.lineTo(X(vals.length - 1), base); c.lineTo(X(0), base); c.closePath(); c.fillStyle = g; c.fill();
+  c.beginPath(); vals.forEach((v, i) => (i ? c.lineTo(X(i), Y(v)) : c.moveTo(X(i), Y(v)))); c.strokeStyle = col; c.lineWidth = 1.8; c.stroke();
+  c.beginPath(); c.arc(X(vals.length - 1), Y(last), 3.5, 0, 7); c.fillStyle = col; c.fill();
+}
+
+/* ---------- panels ---------- */
+function renderScanner(rows) {
+  S.lastScan = rows;
+  $("scanner").innerHTML = rows.map((r) => `
+    <div class="srow ${r.symbol === S.pick ? "pick" : ""}">
+      <div><div class="sym">${r.symbol}</div><div class="meta">${pct(r.change24hPct)} 24h</div></div>
+      <div><canvas data-s="${r.symbol}"></canvas><div class="score"><i style="width:${r.score}%"></i></div></div>
+      <div style="text-align:right"><div class="px">${px(r.price)}</div><div class="meta">score <b style="color:var(--text)">${r.score}</b></div><div class="meta">vol ${r.volatilityPct.toFixed(1)}% · ${r.momentumPct >= 0 ? "+" : ""}${r.momentumPct.toFixed(2)}%</div></div>
+    </div>`).join("");
+  $("scanner").querySelectorAll("canvas").forEach((cv) => { const r = rows.find((x) => x.symbol === cv.dataset.s); spark(cv, r.spark, r.spark.at(-1) >= r.spark[0]); });
+}
+function renderJev(status, filter) {
+  const nc = status.state !== "CONNECTED";
+  $("jevPanel").innerHTML = nc
+    ? `<div class="nc-box"><div class="t">JEV: NOT CONNECTED</div><ul>${status.missing.map((m) => `<li>${esc(m)}</li>`).join("")}</ul></div>
+       <div class="kv" style="margin-top:8px"><span>Filter</span><b class="amb">RULES · score ≥ 60</b></div>
+       <div class="kv"><span>Last pick</span><b>${filter ? esc(filter.pick) : "—"}</b></div>
+       <div class="kv"><span>JEV confidence</span><b class="amb">not available</b></div>`
+    : `<div class="kv"><span>State</span><b class="up">CONNECTED · ${esc(status.model)}</b></div>
+       <div class="kv"><span>Last verdict</span><b>${filter ? `${esc(filter.verdict)} ${esc(filter.pick)}` : "—"}</b></div>
+       <div class="kv"><span>Confidence</span><b>${filter?.confidence != null ? (filter.confidence * 100).toFixed(0) + "%" : "—"}</b></div>
+       <div class="kv"><span>Latency</span><b>${filter?.latencyMs != null ? filter.latencyMs + " ms" : "—"}</b></div>`;
+}
+function renderMetrics(m) {
+  $("kBal").textContent = money(m.equity); $("kBal").className = "v " + cls(m.equity - m.startingBalance);
+  $("kCash").textContent = `cash ${money(m.cash)} · start ${money(m.startingBalance)}`;
+  $("kDay").textContent = money(m.dayPnl, true); $("kDay").className = "v " + cls(m.dayPnl);
+  $("kDayPct").textContent = pct(m.dayPnlPct) + " today (UTC)";
+  $("kRoi").textContent = pct(m.roiPct); $("kRoi").className = "v " + cls(m.roiPct);
+  $("kWin").textContent = m.winRatePct == null ? "--" : m.winRatePct.toFixed(1) + "%";
+  $("kWL").textContent = `${m.wins}W · ${m.losses}L`;
+  $("kDD").textContent = "−" + m.maxDrawdownPct.toFixed(2) + "%"; $("kDD").className = "v " + (m.maxDrawdownPct > 0 ? "down" : "");
+  $("kTrades").textContent = m.trades; $("kPF").textContent = "profit factor " + (m.profitFactor == null ? "--" : m.profitFactor.toFixed(2));
+  $("kOpen").textContent = m.openPositions.length; $("kPend").textContent = `${m.pendingOrders.length} pending`;
+  S.positions = m.openPositions; S.pending = m.pendingOrders;
+  const expo = m.openPositions.reduce((a, p) => a + p.qty * p.mark, 0);
+  $("rExp").textContent = `${money(expo)} · ${((expo / m.equity) * 100).toFixed(1)}%`;
+  $("rSlots").textContent = `${m.openPositions.length + m.pendingOrders.length} / 3`;
+  $("rDay").textContent = pct(m.dayPnlPct); $("rDay").className = cls(m.dayPnlPct);
+  const frac = Math.max(-1, Math.min(1, m.dayPnlPct / 3));
+  Object.assign($("rMeter").style, frac < 0 ? { left: `${50 + frac * 50}%`, width: `${-frac * 50}%`, background: "var(--down)" } : { left: "50%", width: `${frac * 50}%`, background: "var(--up)" });
+  $("halt").classList.toggle("on", m.halted);
+  $("positions").innerHTML = m.openPositions.length || m.pendingOrders.length
+    ? `<table><tr><th>SYM</th><th class="n">QTY</th><th class="n">ENTRY</th><th class="n">MARK</th><th class="n">UPNL</th></tr>${m.openPositions.map((p) => `<tr><td>${p.symbol}</td><td class="n">${p.qty.toPrecision(4)}</td><td class="n">${px(p.entry)}</td><td class="n">${px(p.mark)}</td><td class="n ${cls(p.upnl)}">${money(p.upnl, true)}</td></tr>`).join("")}${m.pendingOrders.map((o) => `<tr style="color:var(--mute)"><td>${o.symbol}</td><td class="n">${o.qty.toPrecision(4)}</td><td class="n">LMT ${px(o.price)}</td><td class="n" colspan="2">pending #${o.id}</td></tr>`).join("")}</table>`
+    : `<div class="empty">No open positions.</div>`;
+}
+function renderHistory() {
+  const rows = S.trades.slice(-9).reverse();
+  $("histNote").textContent = S.trades.length ? `${S.trades.length} closed` : "";
+  $("history").innerHTML = rows.length
+    ? `<table><tr><th>TIME</th><th>SYM</th><th class="n">ENTRY → EXIT</th><th class="n">PNL</th><th>EXIT</th></tr>${rows.map((t) => `<tr><td>${hhmm(t.exitT)}</td><td>${t.symbol}</td><td class="n">${px(t.entry)} → ${px(t.exit)}</td><td class="n ${cls(t.pnl)}">${money(t.pnl, true)}</td><td style="color:var(--mute)">${t.reason.replace(" (gap)", "*")}</td></tr>`).join("")}</table>`
+    : `<div class="empty">No closed trades yet.</div>`;
+}
+
+/* ---------- events ---------- */
+function onEvent(e) {
+  switch (e.type) {
+    case "session_start": {
+      S.quote = e.dataset.quote; S.start = e.config.startingBalance; S.candles = {}; S.trades = []; S.equity = []; S.decisions = 0; S.mix = {}; S.pick = null;
+      for (const [s, arr] of Object.entries(e.history)) S.candles[s] = arr.slice();
+      S.focus = Object.keys(e.history)[0];
+      S.jevOk = e.jev.state === "CONNECTED";
+      $("dsTitle").textContent = e.dataset.title;
+      $("dataMode").textContent = "DATA MODE: REPLAY"; $("demoBtn").textContent = e.mode === "DEMO" ? "RUN DEMO" : "RUN DEMO";
+      $("eqNote").textContent = `account in ${e.dataset.quote}`;
+      $("tape").innerHTML = ""; $("riskActions").innerHTML = "";
+      buildAgents(e.agents); renderJev(e.jev, null); renderHistory(); setFlow(-1);
+      setDecision(null);
+      toast(`${e.mode} · ${stamp(e.window.startT)}`, "#AEB7FF");
+      break;
+    }
+    case "tick":
+      $("clock").textContent = stamp(e.t);
+      for (const [s, c] of Object.entries(e.candles)) if (c) (S.candles[s] ??= []).push(c), S.candles[s].length > 400 && S.candles[s].shift();
+      S.equity.push({ t: e.t, equity: e.equity });
+      renderMetrics(e.metrics);
+      S.dirty = true;
+      break;
+    case "scan": renderScanner(e.rows); setFlow(0); $("nMarket").textContent = `${e.rows.length} symbols`; break;
+    case "filter":
+      S.pick = e.pick; S.focus = e.pick; renderScanner(S.lastScan); renderJev({ state: S.jevOk ? "CONNECTED" : "NOT_CONNECTED", missing: S.jevMissing ?? [] , model: S.jevModel }, e);
+      $("nJev").textContent = e.source === "JEV" ? `${e.verdict} ${e.pick}` : "NOT CONNECTED";
+      AGENT_NAMES.forEach((n) => { const el = $("ag-" + n); if (el) { el.classList.remove("run", "done"); } });
+      setFlow(1);
+      break;
+    case "agent_start": $("ag-" + e.agent)?.classList.add("run"); $("nAgents").textContent = `${e.agent} · ${e.symbol}`; break;
+    case "agent": {
+      const el = $("ag-" + e.agent); if (!el) break;
+      el.classList.remove("run"); el.classList.add("done");
+      const v = $("agv-" + e.agent); v.textContent = e.verdict.replace("_", " "); v.className = "vd " + (VERDICT_CLASS[e.verdict] ?? "");
+      $("ags-" + e.agent).textContent = `${e.symbol} · ${e.summary}`;
+      $("agi-" + e.agent).textContent = "in: " + brief(e.input);
+      $("ago-" + e.agent).textContent = "out: " + brief(e.output);
+      $("agl-" + e.agent).textContent = `latency ${e.latencyMs < 1 ? e.latencyMs.toFixed(2) : e.latencyMs.toFixed(1)} ms`;
+      $("agc-" + e.agent).textContent = e.strength != null ? `rule strength ${e.strength}` : "rules agent";
+      if (e.agent === "RISK") { setFlow(2); $("nRisk").textContent = e.verdict; }
+      if (e.agent === "EXEC") { setFlow(3); $("nOrder").textContent = `#${e.output.orderId} ${e.output.status}`; }
+      break;
+    }
+    case "decision": setDecision(e); break;
+    case "fill": toast(`FILLED ${e.symbol} @ ${px(e.price)}`, "#AEB7FF"); break;
+    case "exit":
+      S.trades.push(e); renderHistory(); S.dirty = true;
+      toast(`${e.result} ${e.symbol} ${money(e.pnl, true)} · ${e.reason}`, e.pnl > 0 ? "#2BD9A5" : "#FF5D6C");
+      break;
+    case "risk_action":
+      $("riskActions").insertAdjacentHTML("afterbegin", `<div>${hhmm(e.t)} ${e.action}: ${esc(e.reason)}</div>`);
+      if (e.action === "HALT") toast("RISK HALT · DAILY LOSS LIMIT", "#FF5D6C");
+      break;
+    case "session_end": finish(e); break;
+    case "error": toast("ERROR " + e.message, "#FF5D6C"); finish({ metrics: null }); break;
+  }
+}
+
+function setDecision(d) {
+  const w = $("dWord");
+  if (!d) { w.innerHTML = `—<small>final decision · <span class="src" id="dSrc">waiting</span></small>`; ["dEntry", "dStop", "dTp", "dSize"].forEach((id) => ($(id).textContent = "--")); $("dObj").innerHTML = ""; return; }
+  S.decisions++; S.mix[d.decision] = (S.mix[d.decision] ?? 0) + 1;
+  $("kDec").textContent = S.decisions; $("kDecMix").textContent = Object.entries(S.mix).map(([k, v]) => `${v} ${k}`).join(" · ");
+  const col = d.decision === "BUY" ? "var(--up)" : d.decision === "SKIP" ? "var(--down)" : "var(--amber)";
+  const src = d.source === "JEV" ? `JEV · ${esc(d.jev.model)}` : "RULES · JEV NOT CONNECTED";
+  w.innerHTML = `<span style="color:${col}">${d.decision}</span> <span style="font-size:17px;color:var(--text)">${esc(d.symbol)}</span><small>final decision · <span class="src">${src}</span></small>`;
+  w.classList.remove("flash"); void w.offsetWidth; w.classList.add("flash");
+  $("dEntry").textContent = `${d.orderType === "LIMIT" ? "LMT " : "MKT "}${px(d.entry)}`;
+  $("dStop").textContent = px(d.stop); $("dTp").textContent = px(d.takeProfit);
+  $("dSize").textContent = money(d.notional); $("dSizeL").textContent = `SIZE · ${(d.pctOfEquity * 100).toFixed(1)}%`;
+  $("dConf").textContent = d.source === "JEV" ? `${(d.jev.confidence * 100).toFixed(0)}% · ${d.jev.latencyMs} ms` : "NOT CONNECTED";
+  $("dConf").className = d.source === "JEV" ? "" : "amb";
+  $("dObj").innerHTML = d.objections.length
+    ? d.objections.map((o) => `<span class="chip ${["VETO", "BLOCK", "BEARISH"].includes(o.verdict) ? "bad" : "warn"}" title="${esc(o.summary)}">${o.agent} ${o.verdict}: ${esc(o.summary)}</span>`).join("")
+    : `<span class="chip">no agent objected</span>`;
+  $("tape").insertAdjacentHTML("afterbegin", `<div><span style="color:var(--mute)">${hhmm(d.t)}</span><span>${esc(d.symbol)}</span><b style="color:${col}">${d.decision}</b><span style="color:var(--mute)">${d.source === "JEV" ? "JEV" : "RULES"} · ${d.objections.length ? d.objections.map((o) => o.agent).join(",") + " objected" : "no objection"}</span></div>`);
+  if ($("tape").children.length > 12) $("tape").lastElementChild.remove();
+}
+
+function finish(e) {
+  S.running = false;
+  $("demoBtn").disabled = $("replayBtn").disabled = false; $("stopBtn").disabled = true;
+  setFlow(-1);
+  document.body.dataset.state = "finished";
+  if (e.metrics) toast(`SESSION END · ${money(e.metrics.equity)} · ROI ${pct(e.metrics.roiPct)}`, e.metrics.roiPct >= 0 ? "#2BD9A5" : "#FF5D6C");
+}
+
+let es = null;
+function start(url) {
+  es?.close(); S.running = true;
+  document.body.dataset.state = "running";
+  $("demoBtn").disabled = $("replayBtn").disabled = true; $("stopBtn").disabled = false;
+  es = new EventSource(url);
+  es.onmessage = (m) => onEvent(JSON.parse(m.data));
+  es.onerror = () => { es.close(); if (S.running) finish({ metrics: null }); };
+}
+$("demoBtn").onclick = () => start("/api/stream?mode=demo");
+$("replayBtn").onclick = () => start(`/api/stream?mode=replay&dataset=${encodeURIComponent($("dsSel").value)}&speed=${$("speedSel").value}`);
+$("stopBtn").onclick = () => { fetch("/api/stop"); es?.close(); finish({ metrics: null }); };
+
+(function loop() { if (S.dirty) { drawChart(); drawEquity(); S.dirty = false; const f = S.focus, a = S.candles[f]; if (a?.length) $("chartTitle").innerHTML = `${esc(f)}<span>${px(a.at(-1).c)}</span>`; } requestAnimationFrame(loop); })();
+addEventListener("resize", () => { S.dirty = true; drawFlow(flowStage); });
+
+(async function init() {
+  const s = await (await fetch("/api/status")).json();
+  S.jevOk = s.jev.state === "CONNECTED"; S.jevMissing = s.jev.missing; S.jevModel = s.jev.model;
+  const b = $("jevBadge");
+  b.textContent = S.jevOk ? `JEV: CONNECTED · ${s.jev.model}` : "JEV: NOT CONNECTED";
+  b.className = "badge " + (S.jevOk ? "ok" : "nc");
+  b.title = S.jevOk ? "" : "Missing: " + s.jev.missing.join("; ");
+  $("nodeJev").classList.toggle("ok", S.jevOk);
+  $("nJev").textContent = S.jevOk ? s.jev.model : "NOT CONNECTED";
+  $("dsSel").innerHTML = s.datasets.map((d) => `<option value="${d.id}" ${d.id === s.demo.dataset ? "selected" : ""}>${new Date(d.start * 1000).toISOString().slice(0, 7)} · ${d.symbols.length} pairs · ${d.quote}</option>`).join("");
+  buildAgents(AGENT_NAMES.map((n) => ({ name: n, role: { TAPE: "Trend, volume, momentum, support/resistance", PRICE: "Entry point without chasing", WIRE: "News/social + market-integrity risk signals", SIZE: "Position size from risk (≤ 10% of balance)", EXEC: "Paper orders only (no exchange)", RISK: "Stops, targets, vetoes, daily loss halt" }[n], partial: n === "WIRE" ? "News/social feed NOT CONNECTED; market-integrity checks only" : null })));
+  renderJev(s.jev, null); drawFlow(-1);
+  if (new URLSearchParams(location.search).has("autodemo")) $("demoBtn").click();
+})();
+</script>
+</body>
+</html>
