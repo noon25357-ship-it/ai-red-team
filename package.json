@@ -7,7 +7,8 @@
     "jev:smoke": "node --env-file-if-exists=.env jev/smoke-test.mjs",
     "setup:key": "bash scripts/setup-typesafe-key.sh",
     "demo": "node --env-file-if-exists=.env creative-os/server.mjs",
-    "record-demo": "node --env-file-if-exists=.env scripts/record-demo.mjs"
+    "record-demo": "node --env-file-if-exists=.env scripts/record-demo.mjs",
+    "analyze-run": "node scripts/analyze-run.mjs"
   },
   "devDependencies": {
     "playwright": "1.56.1"

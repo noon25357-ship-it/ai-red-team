@@ -38,7 +38,7 @@ try {
   await browser.close();
   server.close();
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-");
-  const name = `jev-creative-os-${stamp}${replay !== null ? "-replay" : ""}${status === "COMPLETED" ? "" : "-" + status}.webm`;
+  const name = `jev-creative-os-${stamp}${replay !== null ? "-replay" : ""}${status === "DONE" ? "" : "-" + status}.webm`;
   const out = path.join(demoDir, name);
   await rename(await video.path(), out);
   await rm(tmpDir, { recursive: true, force: true });
@@ -51,4 +51,4 @@ try {
     console.log("mp4:    skipped (ffmpeg with libx264 not found on PATH)");
   }
 }
-process.exit(["COMPLETED", "HUMAN_REVIEW", "STOPPED_MAX_STEPS"].includes(status) ? 0 : 1);
+process.exit(status === "DONE" ? 0 : 1);

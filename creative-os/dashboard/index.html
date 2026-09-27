@@ -259,7 +259,7 @@ function onEvent(e) {
       break;
     case "run_finished": {
       select(null);
-      const ok = e.status === "COMPLETED";
+      const ok = e.status === "DONE";
       $("status").textContent = e.status.replace(/_/g, " "); $("status").className = "pill " + (ok ? "ok" : "bad");
       if (e.status !== "FAILED") core(ok ? "DONE" : e.status.replace(/_/g, " "), `${e.jevCalls} JEV decisions`, 1);
       log(e.t, `${e.status.replace(/_/g, " ")}`, "done " + (ok ? "ok" : "bad"));

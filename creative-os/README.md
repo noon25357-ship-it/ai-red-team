@@ -25,7 +25,9 @@ Each decision records decision, confidence, probabilities, latency (measured aro
 
 ## Guards
 
-- Max 2 retries per skill, max 10 orchestration steps per run.
+- Max 2 retries per skill, max 16 orchestration steps per run (safety cap).
+- A skill that is APPROVED, HUMAN_REVIEW, NOT CONNECTED, or BLOCKED is never run again. It is re-run only when JEV answers `RETRY` and its own answers give a reason (`acceptable = no` or quality < 50). `RETRY` with an acceptable, good-quality output is approved; `CONTINUE` with `acceptable = no` goes to a human instead of a silent retry.
+- A run ends with status `DONE` when JEV picks DONE or every skill is in a final state.
 - Any answer with confidence below `CREATIVE_OS_CONFIDENCE_FLOOR` (default 0.25) → `HUMAN_REVIEW`.
 - Cost guard: a skill with unknown cost, or cost above `CREATIVE_OS_BUDGET_USD` (default 0), goes to a human and is not executed.
 - JEV reviews the evidence each skill reports (dimensions, text, structure), not rendered pixels.

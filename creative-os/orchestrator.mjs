@@ -11,6 +11,28 @@ import { ensureOutputDirs, writeMeta, OUTPUTS, ROOT } from "./assets.mjs";
 const FINAL = new Set(["APPROVED", "HUMAN_REVIEW", "NOT CONNECTED", "BLOCKED"]);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Map one JEV review to an outcome. The orchestrator never invents a retry:
+ * RETRY happens only when JEV chose RETRY and its own answers give a clear reason
+ * (not acceptable, or quality below RETRY_QUALITY_BELOW).
+ */
+const RETRY_QUALITY_BELOW = 50;
+export function reviewOutcome({ q, acceptable, action, low, version, steps }) {
+  if (low) return { outcome: "HUMAN_REVIEW", reason: `Low JEV confidence on review (< ${config.confidenceFloor})` };
+  if (action.decision === "HUMAN_REVIEW") return { outcome: "HUMAN_REVIEW", reason: "JEV requested human review" };
+  if (action.decision === "CONTINUE") {
+    return acceptable.decision
+      ? { outcome: "APPROVED", reason: `JEV approved (quality ${q}/100)` }
+      : { outcome: "HUMAN_REVIEW", reason: "JEV said CONTINUE but not acceptable; conflicting, needs a human" };
+  }
+  // action === RETRY
+  const why = [!acceptable.decision && "not acceptable", q < RETRY_QUALITY_BELOW && `quality ${q}/100`].filter(Boolean);
+  if (why.length === 0) return { outcome: "APPROVED", reason: `JEV asked RETRY but rated it acceptable at ${q}/100; no clear reason to regenerate` };
+  if (version - 1 >= config.maxRetriesPerSkill) return { outcome: "HUMAN_REVIEW", reason: `Retry limit (${config.maxRetriesPerSkill}) reached: ${why.join(", ")}` };
+  if (steps >= config.maxSteps) return { outcome: "HUMAN_REVIEW", reason: `Step limit reached: ${why.join(", ")}` };
+  return { outcome: "RETRY", reason: `JEV chose RETRY: ${why.join(", ")}` };
+}
+
 export async function runCreativeOS({ brief, emit = () => {}, paceMs = config.paceMs } = {}) {
   await ensureOutputDirs();
   const runId = `run-${new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-")}`;
@@ -29,6 +51,7 @@ export async function runCreativeOS({ brief, emit = () => {}, paceMs = config.pa
   const quality = {};
   const context = { assets: {}, skillState };
   const jevCalls = [];
+  const executions = {};
   let steps = 0;
   let budgetRemaining = config.budgetUsd;
   let status = "RUNNING";
@@ -52,7 +75,7 @@ export async function runCreativeOS({ brief, emit = () => {}, paceMs = config.pa
   try {
     while (true) {
       const eligible = SKILLS.filter((s) => !FINAL.has(skillState[s.name]));
-      if (eligible.length === 0) { status = "COMPLETED"; break; }
+      if (eligible.length === 0) { status = "DONE"; break; }
       if (steps >= config.maxSteps) { ev("guard", { reason: `Max ${config.maxSteps} orchestration steps reached` }); status = "STOPPED_MAX_STEPS"; break; }
 
       const pick = await ask("next_skill", {
@@ -72,9 +95,14 @@ export async function runCreativeOS({ brief, emit = () => {}, paceMs = config.pa
         status = "HUMAN_REVIEW";
         break;
       }
-      if (next.decision === "DONE") { status = "COMPLETED"; break; }
+      if (next.decision === "DONE") { status = "DONE"; break; }
 
       const skill = getSkill(next.decision);
+      // A skill in a final state is never re-run from next_skill; only an explicit JEV RETRY re-runs it (below).
+      if (FINAL.has(skillState[skill.name])) {
+        ev("guard", { skill: skill.name, reason: `${skill.name} is already ${skillState[skill.name]}; not re-running` });
+        continue;
+      }
       steps++;
 
       if (skill.status !== "CONNECTED") {
@@ -127,13 +155,8 @@ export async function runCreativeOS({ brief, emit = () => {}, paceMs = config.pa
 
         const { quality: q, acceptable, action } = r.answers;
         quality[skill.name] = qualityToPercent(q.decision);
-        const retriesLeft = version - 1 < config.maxRetriesPerSkill && steps < config.maxSteps;
-        let outcome, reason;
-        if (lowConfidence(r)) { outcome = "HUMAN_REVIEW"; reason = "Low JEV confidence on review"; }
-        else if (action.decision === "CONTINUE" && acceptable.decision) { outcome = "APPROVED"; reason = "JEV approved"; }
-        else if (action.decision === "HUMAN_REVIEW") { outcome = "HUMAN_REVIEW"; reason = "JEV requested human review"; }
-        else if (retriesLeft) { outcome = "RETRY"; reason = action.decision === "RETRY" ? "JEV requested a retry" : "JEV marked it not acceptable"; }
-        else { outcome = "HUMAN_REVIEW"; reason = steps >= config.maxSteps ? "Step limit reached" : `Retry limit (${config.maxRetriesPerSkill}) reached`; }
+        const { outcome, reason } = reviewOutcome({ q: quality[skill.name], acceptable, action, low: lowConfidence(r), version, steps });
+        executions[skill.name] = [...(executions[skill.name] ?? []), { version, outcome, reason }];
 
         out.asset.status = outcome;
         out.asset.jevReview = {
@@ -156,7 +179,7 @@ export async function runCreativeOS({ brief, emit = () => {}, paceMs = config.pa
   }
 
   const summary = {
-    runId, status, steps, skillState,
+    runId, status, steps, maxSteps: config.maxSteps, skillState, executions,
     assets: Object.fromEntries(Object.entries(context.assets).map(([k, v]) => [k, v.asset])),
     jevCalls: jevCalls.length,
     jevLatencyMs: jevCalls.reduce((s, c) => s + c.latencyMs, 0),

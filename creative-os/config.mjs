@@ -6,7 +6,8 @@ const num = (name, fallback) => {
 
 export const config = {
   maxRetriesPerSkill: 2,
-  maxSteps: 10,
+  // Safety cap on skill executions per run (each run, retry, or NOT CONNECTED pick is one step).
+  maxSteps: 16,
   // A JEV decision below this confidence is "clearly low" and goes to HUMAN_REVIEW.
   confidenceFloor: num("CREATIVE_OS_CONFIDENCE_FLOOR", 0.25),
   // Budget for paid skills in USD. 0 means no paid call can run without a human.
