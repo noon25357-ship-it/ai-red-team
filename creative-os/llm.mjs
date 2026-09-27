@@ -10,8 +10,10 @@ const TIMEOUT_MS = 300_000;
  * Run one non-interactive Claude call with no tools. Returns the text plus model, duration and reported cost.
  * Throws with the CLI's own error text on failure.
  */
-export function claude(prompt, { timeoutMs = TIMEOUT_MS } = {}) {
-  const args = ["-p", "--output-format", "json", "--tools", "", "--no-session-persistence", "--strict-mcp-config", "--setting-sources", ""];
+export function claude(prompt, { timeoutMs = TIMEOUT_MS, readDirs = [] } = {}) {
+  // readDirs: directories Claude may read (for example a rendered PNG to critique). No other tool is ever enabled.
+  const tools = readDirs.length ? ["--tools", "Read", "--allowedTools", "Read", ...readDirs.flatMap((d) => ["--add-dir", d])] : ["--tools", ""];
+  const args = ["-p", "--output-format", "json", ...tools, "--no-session-persistence", "--strict-mcp-config", "--setting-sources", ""];
   return new Promise((resolve, reject) => {
     const t0 = performance.now();
     // Run outside the repo so no project CLAUDE.md or settings leak into the prompt.
