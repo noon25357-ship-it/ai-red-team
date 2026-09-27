@@ -31,7 +31,8 @@ export function Engine({ t }: { t: Dictionary["engine"] }) {
     const s = strip.current;
     const tab = tabs.current[active];
     if (!s || !tab || s.scrollWidth <= s.clientWidth) return;
-    const left = tab.offsetLeft - s.clientWidth / 2 + tab.clientWidth / 2;
+    // works in both directions (scrollLeft is negative in RTL)
+    const left = s.scrollLeft + (tab.getBoundingClientRect().left - s.getBoundingClientRect().left) - s.clientWidth / 2 + tab.clientWidth / 2;
     s.scrollTo({ left, behavior: reduced ? "auto" : "smooth" });
   }, [active, reduced]);
 

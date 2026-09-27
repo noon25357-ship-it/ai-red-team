@@ -3,9 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // The default locale is served at the root. Add locales in lib/i18n.ts.
+  // Arabic (the default locale) is served at the root; /ar redirects there.
   async rewrites() {
-    return [{ source: "/", destination: "/en" }];
+    return [{ source: "/", destination: "/ar" }];
+  },
+  async redirects() {
+    return [{ source: "/ar", destination: "/", permanent: true }];
   },
 };
 

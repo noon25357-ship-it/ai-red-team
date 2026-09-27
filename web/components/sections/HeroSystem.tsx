@@ -23,11 +23,11 @@ const DESKTOP: Pt[] = [
 // Tablet: same staircase, in its own band under the copy.
 const TABLET: Pt[] = [
   { x: 0.03, y: 0.9 },
-  { x: 0.2, y: 0.9 },
-  { x: 0.4, y: 0.64 },
-  { x: 0.57, y: 0.64 },
-  { x: 0.75, y: 0.37 },
-  { x: 0.9, y: 0.1 },
+  { x: 0.17, y: 0.9 },
+  { x: 0.37, y: 0.64 },
+  { x: 0.54, y: 0.64 },
+  { x: 0.76, y: 0.37 },
+  { x: 0.92, y: 0.1 },
 ];
 const MOBILE: Pt[] = [
   { x: 0.05, y: 0.93 },
@@ -38,11 +38,11 @@ const MOBILE: Pt[] = [
   { x: 0.5, y: 0.08 },
 ];
 // Probability that a visitor is still in the system when it reaches node k.
-const LABEL_CLEAR = 104;
+const LABEL_CLEAR = { ltr: 104, rtl: 150 };
 const SURVIVAL = [1, 1, 0.8, 0.5, 0.36, 0.2];
 const HOLD = [900, 900, 1100, 1300, 1500, 2600];
 
-function buildRoute(nodes: Pt[], mobile: boolean, w: number, h: number) {
+function buildRoute(nodes: Pt[], mobile: boolean, w: number, h: number, rtl: boolean, clear: number) {
   const pts: Pt[] = [];
   const at: number[] = [];
   const first = nodes[0];
@@ -57,7 +57,7 @@ function buildRoute(nodes: Pt[], mobile: boolean, w: number, h: number) {
         pts.push({ x: a.x, y: midY }, { x: n.x, y: midY });
       } else {
         // a riser never cuts through the label that sits above the previous node
-        const midX = Math.min(n.x - 16, Math.max(n.rx ?? (a.x + n.x) / 2, a.x + LABEL_CLEAR));
+        const midX = Math.min(n.x - 16, Math.max(n.rx ?? (a.x + n.x) / 2, a.x + clear));
         pts.push({ x: midX, y: a.y }, { x: midX, y: n.y });
       }
     }
@@ -65,6 +65,8 @@ function buildRoute(nodes: Pt[], mobile: boolean, w: number, h: number) {
     at.push(pts.length - 1);
   });
   if (!mobile) pts.push({ x: w, y: nodes[nodes.length - 1].y });
+  // RTL: the whole system mirrors, so signals enter from the right and climb to the left.
+  if (rtl) pts.forEach((p) => (p.x = w - p.x));
   // cumulative lengths
   const cum = [0];
   for (let i = 1; i < pts.length; i++) {
@@ -113,6 +115,8 @@ export function HeroSystem({ nodes, label, note, a11y }: { nodes: SystemNode[]; 
   }, []);
 
   const mobile = !!size && size.w < 600;
+  const [rtl, setRtl] = useState(false);
+  useEffect(() => setRtl(document.documentElement.dir === "rtl"), []);
   const route = useMemo(() => {
     if (!size) return null;
     const frac = mobile ? MOBILE : size.h > 600 ? DESKTOP : TABLET;
@@ -121,8 +125,8 @@ export function HeroSystem({ nodes, label, note, a11y }: { nodes: SystemNode[]; 
       y: Math.round(p.y * size.h),
       rx: p.rx === undefined ? undefined : Math.round(p.rx * size.w),
     }));
-    return buildRoute(pts, mobile, size.w, size.h);
-  }, [size, mobile]);
+    return buildRoute(pts, mobile, size.w, size.h, rtl, rtl ? LABEL_CLEAR.rtl : LABEL_CLEAR.ltr);
+  }, [size, mobile, rtl]);
 
   // Wait for the path to draw before the first signal enters.
   useEffect(() => {
@@ -218,7 +222,7 @@ export function HeroSystem({ nodes, label, note, a11y }: { nodes: SystemNode[]; 
           {nodes.map((n, i) => {
             const p = route.pts[route.at[i]];
             // flip labels to the left when the status line would run off the edge
-            const flip = !mobile && p.x > size.w - 230;
+            const flip = !mobile && (rtl ? p.x < 250 : p.x > size.w - 230);
             return (
               <div
                 key={n.id}

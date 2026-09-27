@@ -21,8 +21,22 @@ npm run test:e2e     # Playwright smoke suite against :3000 (BASE_URL / CHROMIUM
 - `lib/i18n.ts`: locale registry. `/` rewrites to `/en`.
 - `components/sections/*`: one file per section.
 
-## Adding Arabic (RTL)
-1. Create `content/ar.ts` exporting `const ar: Dictionary = { … }`.
-2. Add `"ar"` to `locales` and `dictionaries` in `lib/i18n.ts`.
+## Languages
+**Arabic is the default** and is served at `/` (`lang="ar" dir="rtl"`). English is at `/en`, and `/ar` redirects to `/`. A switch in the nav links the two.
 
-The layout then sets `lang="ar" dir="rtl"`, and the Arabic font is already loaded. Components use logical properties (`start`/`end`, `ps`/`pe`), and the engine tabs swap their arrow keys in RTL.
+- `content/ar.ts` holds the Arabic copy. It was written for Saudi and Gulf decision makers, not translated. Technical terms stay in English only where they read clearer (AI, CRM, Meta Ads, Google Ads, UGC). Never attach the Arabic article to a Latin word ("الـAI"), because bidi reorders it; phrase around it instead.
+- Arabic type system: IBM Plex Sans Arabic 400–700 for display, body and labels, with no letter-spacing and taller line-heights. The rules are in the "Arabic & RTL" block of `app/globals.css`.
+- Identity never changes with the script: the NIZAM wordmark, the staircase mark and the square signal full stop.
+- In RTL every flow runs in reading direction:
+  - the hero staircase climbs right to left
+  - the engine rail and its data flow run right to left
+  - the attribution diagram mirrors
+  - the method loop mirrors
+  - the lab's motion playhead reverses
+
+  The finale's brand mark is never mirrored; it moves to the reading end instead.
+
+```bash
+npm run test:e2e              # Arabic (default)
+LOCALE=en npm run test:e2e    # English
+```

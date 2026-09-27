@@ -1,17 +1,21 @@
 import { en, type Dictionary } from "@/content/en";
+import { ar } from "@/content/ar";
 
 /**
- * Locale registry. To launch Arabic:
- * 1. add content/ar.ts (`export const ar: Dictionary = { … }`)
- * 2. add "ar" to `locales` and `dictionaries`
- * Layout direction, lang attribute and fonts follow automatically.
- * Components use logical properties (start/end, ps/pe) so they mirror in RTL.
+ * Locale registry. Arabic is the default and is served at "/"; English lives at "/en".
+ * Layout direction, lang attribute and type system follow the locale.
+ * Components use logical properties (start/end, ps/pe) so they mirror in RTL,
+ * and flow diagrams mirror so data always travels in reading direction.
  */
-export const locales = ["en"] as const;
+export const locales = ["ar", "en"] as const;
 export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "en";
+export const defaultLocale: Locale = "ar";
 
-const dictionaries: Record<Locale, Dictionary> = { en };
+const dictionaries: Record<Locale, Dictionary> = { ar, en };
+
+export function pathOf(locale: Locale) {
+  return locale === defaultLocale ? "/" : `/${locale}`;
+}
 
 const rtl = new Set<string>(["ar"]);
 

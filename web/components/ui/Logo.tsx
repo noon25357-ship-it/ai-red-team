@@ -14,9 +14,16 @@ export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <Mark />
-      <span className="display text-[17px] tracking-[-0.02em] leading-none">{site.name}</span>
+      <span className="wordmark" lang="en">
+        {site.name}
+      </span>
     </span>
   );
+}
+
+/** The brand full stop: a square of signal, identical in every script. */
+export function SignalDot() {
+  return <span className="signal-dot" aria-hidden="true" />;
 }
 
 export function Arrow({ className = "" }: { className?: string }) {

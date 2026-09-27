@@ -49,9 +49,19 @@ export function Bottle({ className = "", glass = "#7a4119", cap = "#cdbfa6" }: {
   );
 }
 
+/** A line in the page's other language (Arabic on the English page, English on the Arabic one). */
+function AltLang({ t, className = "", children }: { t: T; className?: string; children: React.ReactNode }) {
+  const ar = t.altLang === "ar";
+  return (
+    <p className={`${ar ? "font-arabic" : "font-sans"} ${className}`} lang={t.altLang} dir={ar ? "rtl" : "ltr"}>
+      {children}
+    </p>
+  );
+}
+
 function FrameLabel({ label, format }: { label: string; format: string }) {
   return (
-    <span className="label mb-1.5 flex items-center justify-between gap-2 !text-[10px] text-graphite">
+    <span className="label mb-1.5 flex items-center justify-between gap-2 text-[10px] text-graphite">
       <span className="text-ink">{label}</span>
       <span>{format}</span>
     </span>
@@ -84,9 +94,9 @@ function Art({ id, t }: { id: string; t: T }) {
         <div className="relative flex h-full flex-col justify-between overflow-hidden bg-ink p-4 text-stone">
           <div>
             <p className="display-md text-[20px] leading-[0.98]">{c.productLine}</p>
-            <p className="font-arabic mt-2 text-[14px] text-stone/70" lang="ar" dir="rtl">
+            <AltLang t={t} className="mt-2 text-[14px] text-stone/70">
               {c.productArabic}
-            </p>
+            </AltLang>
           </div>
           <Bottle className="absolute bottom-[-14%] right-[8%] w-[34%]" />
         </div>
@@ -101,7 +111,7 @@ function Art({ id, t }: { id: string; t: T }) {
           <div className="relative border-t border-stone/25 pt-2">
             <div className="flex justify-between">
               {c.motionKeys.map((k) => (
-                <span key={k} className="label !text-[9px] opacity-80">
+                <span key={k} className="label text-[9px] opacity-80">
                   ◆ {k}
                 </span>
               ))}
@@ -114,8 +124,10 @@ function Art({ id, t }: { id: string; t: T }) {
       return (
         <div className="flex h-full flex-col justify-between border border-ink/80 bg-paper p-3">
           <div className="flex items-center justify-between">
-            <span className="label !text-[10px] text-ink">AR ▸ EN</span>
-            <span className="label !text-[10px] text-graphite">00:07</span>
+            <span className="label text-[10px] text-ink" dir="ltr">
+              {c.voiceLang}
+            </span>
+            <span className="label text-[10px] text-graphite">00:07</span>
           </div>
           <div className="flex h-9 items-center gap-[3px]" aria-hidden="true">
             {Array.from({ length: 46 }).map((_, i) => (
@@ -140,7 +152,7 @@ function Art({ id, t }: { id: string; t: T }) {
           <Segments n={3} on={1} />
           <p className="display-md mt-4 text-[17px] leading-[1]">{c.shortTitle}</p>
           <ol className="mt-auto space-y-1.5">
-            {["Wrist", "Collar", "Scarf"].map((w, i) => (
+            {c.shortItems.map((w, i) => (
               <li key={w} className="flex items-center gap-2 border-t border-ink/20 pt-1.5 text-[11px] font-medium">
                 <span className="font-mono text-graphite">{i + 1}</span>
                 {w}
@@ -163,15 +175,15 @@ function Art({ id, t }: { id: string; t: T }) {
           <div className="flex items-center justify-between border-b border-rule px-3 py-1.5">
             <span className="display text-[10px]">Oud Nº 7</span>
             <span className="flex gap-3 text-[10px] text-graphite">
-              <span>Collection</span>
-              <span>Story</span>
-              <span>Stores</span>
+              {c.landingNav.map((n) => (
+                <span key={n}>{n}</span>
+              ))}
             </span>
           </div>
           <div className="grid flex-1 grid-cols-2">
             <div className="flex flex-col justify-center gap-3 p-5">
               <p className="display text-[26px] leading-[0.9]">{c.landingTitle}</p>
-              <span className="w-max bg-ink px-3 py-1.5 text-[11px] font-semibold text-stone">{c.landingCta} →</span>
+              <span className="w-max bg-ink px-3 py-1.5 text-[11px] font-semibold text-stone">{c.landingCta}</span>
             </div>
             <div className="relative overflow-hidden bg-palm">
               <Bottle className="absolute bottom-[-6%] left-1/2 w-[40%] -translate-x-1/2" />
@@ -265,7 +277,7 @@ export function Lab({ t }: { t: T }) {
             className="absolute z-10 flex flex-col"
             style={{ left: cq(PRODUCT.x), top: cq(PRODUCT.y), width: cq(PRODUCT.w) }}
           >
-            <span className="label mb-1.5 flex justify-between !text-[10px] text-graphite">
+            <span className="label mb-1.5 flex justify-between text-[10px] text-graphite">
               <span className="text-ink">{t.brief}</span>
               <span>01 / 01</span>
             </span>
@@ -276,9 +288,9 @@ export function Lab({ t }: { t: T }) {
                   <p className="display text-[15px]">{t.product.name}</p>
                   <p className="text-[12px] text-graphite">{t.product.detail}</p>
                 </div>
-                <p className="font-arabic text-[15px]" lang="ar" dir="rtl">
+                <AltLang t={t} className="text-[15px]">
                   {t.product.arabic}
-                </p>
+                </AltLang>
               </div>
             </div>
           </div>
@@ -287,7 +299,7 @@ export function Lab({ t }: { t: T }) {
         {/* Mobile: the same system as a contact sheet */}
         <div className="mt-14 md:hidden">
           <div className="border border-ink bg-paper p-4">
-            <span className="label flex justify-between !text-[10px] text-graphite">
+            <span className="label flex justify-between text-[10px] text-graphite">
               <span className="text-ink">{t.brief}</span>
               <span>{t.product.detail}</span>
             </span>

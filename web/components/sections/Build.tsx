@@ -7,7 +7,7 @@ import { AcquisitionVisual, ConversionVisual, IntelligenceVisual } from "./Build
 
 type Layer = Dictionary["build"]["layers"][number];
 
-function LayerBlock({ layer, variant }: { layer: Layer; variant: 0 | 1 | 2 }) {
+function LayerBlock({ layer, variant, ui }: { layer: Layer; variant: 0 | 1 | 2; ui: Dictionary["build"]["ui"] }) {
   const ref = useRef<HTMLElement>(null);
   useInView(ref, { rootMargin: "0px 0px -20% 0px" });
 
@@ -35,11 +35,11 @@ function LayerBlock({ layer, variant }: { layer: Layer; variant: 0 | 1 | 2 }) {
 
   const visual =
     variant === 0 ? (
-      <AcquisitionVisual layer={layer} />
+      <AcquisitionVisual layer={layer} ui={ui} />
     ) : variant === 1 ? (
-      <ConversionVisual layer={layer} />
+      <ConversionVisual layer={layer} ui={ui} />
     ) : (
-      <IntelligenceVisual layer={layer} />
+      <IntelligenceVisual layer={layer} ui={ui} />
     );
 
   return (
@@ -90,7 +90,7 @@ export function Build({ t }: { t: Dictionary["build"] }) {
         </div>
         <div className="mt-[clamp(64px,10vh,120px)] flex flex-col gap-[clamp(96px,16vh,200px)]">
           {t.layers.map((layer, i) => (
-            <LayerBlock key={layer.id} layer={layer} variant={i as 0 | 1 | 2} />
+            <LayerBlock key={layer.id} layer={layer} variant={i as 0 | 1 | 2} ui={t.ui} />
           ))}
         </div>
       </div>

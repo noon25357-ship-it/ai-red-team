@@ -7,6 +7,10 @@
 import { chromium } from "playwright-core";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
+// Arabic is served at "/", English at "/en". Run both: LOCALE=ar (default) and LOCALE=en.
+const LOCALE = process.env.LOCALE ?? "ar";
+const PATH = LOCALE === "ar" ? "/" : "/en";
+const DIR = LOCALE === "ar" ? "rtl" : "ltr";
 const EXEC = process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
 
 const results = [];
@@ -23,7 +27,7 @@ async function open(viewport, opts = {}) {
   const errors = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   page.on("pageerror", (e) => errors.push(String(e)));
-  const res = await page.goto(BASE + "/", { waitUntil: "networkidle" });
+  const res = await page.goto(BASE + PATH, { waitUntil: "networkidle" });
   return { ctx, page, errors, res };
 }
 
@@ -43,7 +47,7 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
     jsonld: !!document.querySelector('script[type="application/ld+json"]'),
     og: !!document.querySelector('meta[property="og:title"]'),
   }));
-  check("html lang/dir set", meta.lang === "en" && meta.dir === "ltr", `${meta.lang}/${meta.dir}`);
+  check("html lang/dir set", meta.lang === LOCALE && meta.dir === DIR, `${meta.lang}/${meta.dir}`);
   check("Title and description present", meta.title.length > 10 && meta.desc.length > 50, meta.title);
   check("Exactly one h1", meta.h1 === 1, String(meta.h1));
   check("Landmarks, JSON-LD, OpenGraph", meta.main && meta.jsonld && meta.og);
@@ -77,6 +81,46 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
   check("No <img> without alt", imgNoAlt === 0);
 
   check("No console errors on load", errors.length === 0, errors.join(" | "));
+  await ctx.close();
+}
+
+/* ---------- 1b. Direction & script ---------- */
+{
+  const { ctx, page } = await open({ width: 1440, height: 900 });
+  await page.waitForTimeout(2500);
+  const d = await page.evaluate(() => {
+    const x = (el) => el.getBoundingClientRect().left;
+    const nodes = [...document.querySelectorAll(".hero-node")].filter((n) => n.offsetParent);
+    const tabs = document.querySelectorAll("[role=tab]");
+    const h1 = getComputedStyle(document.querySelector("#hero-title"));
+    return {
+      heroFlowsRight: x(nodes[nodes.length - 1]) > x(nodes[0]),
+      tabsFlowRight: x(tabs[tabs.length - 1]) > x(tabs[0]),
+      markLeftOfCopy: (() => {
+        const line = document.querySelector(".final-line").getBoundingClientRect();
+        const range = document.createRange();
+        range.selectNodeContents(document.querySelector(".final-l2"));
+        const text = range.getBoundingClientRect();
+        return line.left + line.width / 2 < text.left + text.width / 2;
+      })(),
+      font: h1.fontFamily,
+      tracking: h1.letterSpacing,
+      switchHref: document.querySelector("header a[hreflang]")?.getAttribute("href"),
+      dot: !!document.querySelector("#hero-title .signal-dot"),
+    };
+  });
+  const rtl = DIR === "rtl";
+  check("Hero system flows in reading direction", d.heroFlowsRight === !rtl);
+  check("Engine stages run in reading direction", d.tabsFlowRight === !rtl);
+  check("Finale: brand mark sits opposite the copy", d.markLeftOfCopy === rtl);
+  check(`Display type is ${rtl ? "IBM Plex Sans Arabic" : "Archivo"}`, rtl ? /Plex.Sans.Arabic/.test(d.font) : /Archivo/.test(d.font), d.font.slice(0, 60));
+  if (rtl) check("Arabic headings carry no letter-spacing", d.tracking === "normal" || d.tracking === "0px", d.tracking);
+  check("Language switch links to the other locale", d.switchHref === (rtl ? "/en" : "/"), d.switchHref);
+  check("Brand full stop is the square signal", d.dot);
+  if (rtl) {
+    const r = await page.request.get(BASE + "/ar", { maxRedirects: 0 });
+    check("/ar redirects to the root", [301, 308].includes(r.status()), String(r.status()));
+  }
   await ctx.close();
 }
 
@@ -117,8 +161,9 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
 /* ---------- 3. Navigation ---------- */
 {
   const { ctx, page } = await open({ width: 1440, height: 900 });
-  for (const [label, id] of [["What we build", "build"], ["System", "system"], ["Creative lab", "lab"], ["How we work", "method"]]) {
-    await page.click(`header nav >> text="${label}"`);
+  for (const id of ["build", "system", "lab", "method"]) {
+    const label = await page.textContent(`header nav ul a[href="#${id}"]`);
+    await page.click(`header nav ul a[href="#${id}"]`);
     await page.waitForTimeout(1400);
     const top = await page.evaluate((id) => document.getElementById(id).getBoundingClientRect().top, id);
     check(`Nav → ${label}`, Math.abs(top - 64) < 80, `section top at ${Math.round(top)}px`);
@@ -132,7 +177,7 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
 
   // primary CTA lands on the resolved final state
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
-  await page.click("header >> text=Build your system");
+  await page.click('header nav a.btn[href="#contact"]');
   await page.waitForTimeout(1800);
   const finalState = await page.evaluate(() => ({
     p: parseFloat(getComputedStyle(document.querySelector("#final")).getPropertyValue("--p")),
@@ -169,15 +214,15 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
   const { ctx, page } = await open({ width: 1440, height: 900 });
   await scrollToEl(page, "#system");
   await page.waitForTimeout(600);
+  const panelFor = () => page.getAttribute("#engine-panel", "aria-labelledby");
   await page.click("#engine-tab-followup");
-  let panel = await page.textContent("#engine-panel");
-  check("Engine: click selects stage", panel.includes("Follow-up"));
-  await page.keyboard.press("ArrowRight");
-  panel = await page.textContent("#engine-panel");
+  check("Engine: click selects stage", (await panelFor()) === "engine-tab-followup");
+  // "next" is the arrow pointing in reading direction
+  await page.keyboard.press(DIR === "rtl" ? "ArrowLeft" : "ArrowRight");
   const focused = await page.evaluate(() => document.activeElement?.id);
-  check("Engine: arrow keys move between stages", panel.includes("Sales team") && focused === "engine-tab-sales", focused);
+  check("Engine: arrow keys move between stages (reading direction)", (await panelFor()) === "engine-tab-sales" && focused === "engine-tab-sales", focused);
   await page.keyboard.press("End");
-  check("Engine: End jumps to last stage", (await page.textContent("#engine-panel")).includes("Dashboard"));
+  check("Engine: End jumps to last stage", (await panelFor()) === "engine-tab-dashboard");
 
   // AI layer runs to completion, then replays
   await scrollToEl(page, "#ai");
@@ -185,18 +230,19 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
   await page.waitForTimeout(1400 * 7 + 800);
   const status = await page.textContent("#ai [aria-live]");
   check("AI layer: sequence completes", status.includes("7 / 7"), status);
-  await page.click("#ai >> text=Replay");
+  await page.click("#ai-replay");
   await page.waitForTimeout(300);
-  check("AI layer: replay restarts", (await page.textContent("#ai [aria-live]")).includes("Running"));
+  check("AI layer: replay restarts", !(await page.textContent("#ai [aria-live]")).includes("7 / 7"));
 
   // sankey highlight
   await scrollToEl(page, "#build-intelligence");
-  await page.hover("#build-intelligence >> text=Referral");
-  const pressed = await page.getAttribute("#build-intelligence button:has-text('Referral')", "aria-pressed");
+  const channel = page.locator("#build-intelligence button[aria-pressed]").nth(3);
+  await channel.hover();
+  const pressed = await channel.getAttribute("aria-pressed");
   check("Attribution: hovering a channel highlights it", pressed === "true");
 
   // keyboard: skip link
-  await page.goto(BASE + "/", { waitUntil: "networkidle" });
+  await page.goto(BASE + PATH, { waitUntil: "networkidle" });
   await page.keyboard.press("Tab");
   const skip = await page.evaluate(() => document.activeElement?.className);
   check("Keyboard: first Tab reaches skip link", String(skip).includes("skip-link"));
@@ -212,7 +258,7 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
   await page.keyboard.press("Escape");
   check("Mobile: Escape closes menu", (await toggle.getAttribute("aria-expanded")) === "false");
   await toggle.click();
-  await page.click('#mobile-menu >> text="Creative lab"');
+  await page.click('#mobile-menu a[href="#lab"]');
   await page.waitForTimeout(1400);
   const top = await page.evaluate(() => document.getElementById("lab").getBoundingClientRect().top);
   check("Mobile: menu link navigates and closes", (await toggle.getAttribute("aria-expanded")) === "false" && Math.abs(top - 64) < 80, `${Math.round(top)}px`);

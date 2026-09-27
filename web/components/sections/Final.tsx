@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import type { Dictionary } from "@/content/en";
 import { useStickyProgress } from "@/lib/hooks";
-import { Arrow } from "../ui/Logo";
+import { Arrow, SignalDot } from "../ui/Logo";
 import { mailto } from "@/lib/contact";
 
 // Where each part of the system is scattered at the start (in % of the stage).
@@ -82,7 +82,7 @@ export function Final({ t }: { t: Dictionary["final"] }) {
             <span className="final-l2 display mt-4 block text-[clamp(34px,7vw,124px)]">{t.lines[1]}</span>
             <span className="final-l3 display block text-[clamp(34px,7vw,124px)]">
               {t.closer.replace(/\.$/, "")}
-              <span className="text-signal">.</span>
+              <SignalDot />
             </span>
           </h2>
           <div className="final-cta mt-9 flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-10">

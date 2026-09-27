@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Archivo, Instrument_Sans, IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
-import { dirOf, getDictionary, isLocale, locales } from "@/lib/i18n";
+import { dirOf, getDictionary, isLocale, locales, pathOf } from "@/lib/i18n";
 import { site } from "@/lib/site";
 import "../globals.css";
 
@@ -23,11 +23,10 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 const plexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic"],
-  weight: ["400", "600"],
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-plex-arabic",
   display: "swap",
-  preload: false,
 });
 
 export function generateStaticParams() {
@@ -44,13 +43,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     metadataBase: new URL(site.url),
     title: t.meta.title,
     description: t.meta.description,
-    alternates: { canonical: "/" },
+    alternates: {
+      canonical: pathOf(locale),
+      languages: { ar: "/", en: "/en", "x-default": "/" },
+    },
     openGraph: {
       title: t.meta.title,
       description: t.meta.description,
       type: "website",
       siteName: site.name,
-      locale,
+      locale: locale === "ar" ? "ar_SA" : "en_US",
     },
     twitter: { card: "summary_large_image", title: t.meta.title, description: t.meta.description },
     icons: { icon: "/icon.svg" },

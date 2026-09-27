@@ -83,10 +83,21 @@ export function Nav({ t }: { t: Dictionary["nav"] }) {
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <a
+            href={t.switchHref}
+            hrefLang={t.switchLang}
+            lang={t.switchLang}
+            aria-label={t.switchA11y}
+            className={`inline-flex h-10 items-center px-2 text-[13px] font-medium opacity-80 transition-opacity hover:opacity-100 ${
+              t.switchLang === "ar" ? "font-arabic" : "font-mono tracking-[0.08em]"
+            }`}
+          >
+            {t.switchLabel}
+          </a>
           <a
             href="#contact"
-            className="btn hidden !min-h-[40px] !px-4 !text-[14px] sm:inline-flex"
+            className="btn hidden !min-h-[40px] !px-4 text-[14px] sm:inline-flex"
           >
             {t.cta}
             <Arrow />

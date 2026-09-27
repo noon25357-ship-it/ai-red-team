@@ -41,7 +41,7 @@ export function Proof({ t }: { t: Dictionary["proof"] }) {
               >
                 <dt className="flex items-baseline gap-4">
                   <span className="label text-graphite">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="text-[clamp(18px,1.6vw,24px)] font-medium tracking-[-0.015em]">{m.label}</span>
+                  <span className="text-[clamp(18px,1.6vw,24px)] font-medium tracking-[-0.015em]">{t.metrics[m.id] ?? m.label}</span>
                 </dt>
                 {m.value ? (
                   <dd className="text-end">

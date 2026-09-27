@@ -23,7 +23,7 @@ export function Footer({ t, nav }: { t: Dictionary["footer"]; nav: Dictionary["n
           <a href="#top" className="label text-fog hover:text-stone">
             {t.top} ↑
           </a>
-          <p className="label text-fog">
+          <p className="label text-fog" dir="ltr">
             © {new Date().getFullYear()} {site.name}
           </p>
         </div>

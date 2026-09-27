@@ -694,6 +694,7 @@ body {
   }
 }
 .final-node {
+  --sxe: var(--sx);
   --tx: calc(var(--bx0) + var(--bx) * var(--bw));
   --ty: calc(var(--by0) + var(--by) * var(--bh));
   --qk: clamp(0, calc(var(--q) * 1.3 - var(--k) * 0.025), 1);
@@ -702,7 +703,7 @@ body {
   width: 0;
   height: 0;
   transform: translate(
-    calc((min(var(--sx), var(--sx-max, 100)) - var(--tx)) * 1cqw * (1 - var(--qk))),
+    calc((max(min(var(--sxe), var(--sx-max, 100)), var(--sx-min, 0)) - var(--tx)) * 1cqw * (1 - var(--qk))),
     calc((var(--sy) - var(--ty)) * 1cqh * (1 - var(--qk)))
   );
   will-change: transform;
@@ -730,6 +731,9 @@ body {
   opacity: calc(1 - clamp(0, calc((var(--p) - 0.34) / 0.14), 1));
 }
 .final-line {
+  /* explicit: an over-constrained box drops `left` in RTL */
+  right: auto;
+  bottom: auto;
   left: calc(var(--bx0) * 1%);
   top: calc(var(--by0) * 1%);
   width: calc(var(--bw) * 1%);
@@ -778,4 +782,204 @@ body {
   .build-name {
     font-size: 8.8vw;
   }
+}
+
+/* ==================================================================
+   Arabic & RTL
+   Arabic is the default locale. The type system swaps to IBM Plex Sans
+   Arabic, drops tracking (it breaks joining), opens up line-height for
+   ascenders and dots, and every flow diagram mirrors so data moves in
+   reading direction. Unlayered on purpose: these beat utilities.
+================================================================== */
+html:lang(ar) {
+  --font-display: var(--font-plex-arabic), "Geeza Pro", sans-serif;
+  --font-sans: var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), var(--font-plex-arabic), ui-monospace, monospace;
+}
+html:lang(ar) body {
+  line-height: 1.7;
+}
+html:lang(ar) body *:not([lang="en"]):not([lang="en"] *) {
+  letter-spacing: 0 !important;
+}
+html:lang(ar) .display {
+  font-stretch: normal;
+  font-variation-settings: normal;
+  font-weight: 700;
+  text-transform: none;
+  line-height: 1.12;
+}
+html:lang(ar) .display-md {
+  font-stretch: normal;
+  font-variation-settings: normal;
+  font-weight: 700;
+  line-height: 1.32;
+}
+html:lang(ar) .label {
+  /* a monospace space between Arabic words reads as a gap; labels use Plex Arabic */
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12.5px;
+  line-height: 1.55;
+  text-transform: none;
+}
+html:lang(ar) .lede {
+  line-height: 1.65;
+}
+html:lang(ar) .reveal-line {
+  padding-block: 0.1em 0.16em;
+  margin-block: -0.1em -0.16em;
+}
+html:lang(ar) .hero-title {
+  font-size: clamp(60px, min(10.6vw, 17.5vh), 176px);
+  line-height: 1.08;
+}
+@media (max-width: 767px) {
+  html:lang(ar) .hero-title {
+    font-size: clamp(52px, 17vw, 110px);
+  }
+}
+html:lang(ar) .build-name {
+  font-size: clamp(56px, 12vw, 216px);
+  line-height: 1.1;
+}
+@media (max-width: 767px) {
+  html:lang(ar) .build-name {
+    font-size: 17vw;
+  }
+}
+html:lang(ar) .problem-name {
+  font-weight: 700;
+  line-height: 1.3;
+  font-size: clamp(20px, 2.2vw, 36px);
+}
+html:lang(ar) .problem-note {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-transform: none;
+}
+html:lang(ar) .hero-node-label,
+html:lang(ar) .hero-node-status {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-transform: none;
+  line-height: 1.4;
+}
+html:lang(ar) .hero-node-label {
+  font-weight: 600;
+}
+html:lang(ar) .final-label {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-transform: none;
+}
+
+/* Buttons fill from the reading start */
+[dir="rtl"] .lab-playhead {
+  animation-direction: reverse;
+}
+[dir="rtl"] .btn::before {
+  transform-origin: right;
+}
+
+/* Hero: labels sit after each node in reading direction */
+.hero-node-status::before {
+  margin-right: 0;
+  margin-inline-end: 7px;
+}
+[dir="rtl"] .hero-node-label,
+[dir="rtl"] .hero-node-status {
+  left: auto;
+  right: 14px;
+}
+[dir="rtl"] .hero-node-status {
+  padding: 2px 0 2px 6px;
+}
+[dir="rtl"] .hero-node-label.is-flip,
+[dir="rtl"] .hero-node-status.is-flip {
+  right: auto;
+  left: 14px;
+}
+[dir="rtl"] .hero-node-status.is-flip {
+  padding: 2px 6px 2px 0;
+}
+html:lang(ar) .hero-node-status.is-flip {
+  bottom: 30px;
+}
+
+/* Problem: the broken links drift with their rows */
+[dir="rtl"] .problem-link-broken {
+  transform: translateX(calc(var(--jx) * var(--drift) * (var(--q) - 1)));
+}
+
+/* Engine: data flows toward the reading end */
+[dir="rtl"] .engine-flow i {
+  animation-name: flow-rtl;
+}
+[dir="rtl"] .engine-flow i::after {
+  right: auto;
+  left: 0;
+  box-shadow: 14px 0 0 -1.5px rgb(255 83 22 / 0.5), 26px 0 0 -2px rgb(255 83 22 / 0.25);
+}
+@keyframes flow-rtl {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Final: the mark keeps its identity (never mirrored) and moves to the reading end */
+[dir="rtl"] .final-stage {
+  --bx0: 10;
+}
+@media (max-width: 767px) {
+  [dir="rtl"] .final-stage {
+    --bx0: 14;
+  }
+}
+/* scatter mirrors so labels (after the node in reading order) stay on screen */
+[dir="rtl"] .final-node {
+  --sxe: calc(100 - var(--sx));
+}
+@media (max-width: 767px) {
+  [dir="rtl"] .final-node {
+    --sx-max: 100;
+    --sx-min: 30;
+  }
+}
+[dir="rtl"] .final-label {
+  left: auto;
+  right: 14px;
+}
+
+/* Identity: the wordmark and the signal full stop never change with the script */
+.wordmark {
+  font-family: var(--font-archivo), "Arial Narrow", sans-serif;
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  font-size: 17px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.02em !important;
+}
+.signal-dot {
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-inline-start: 0.04em;
+  background: var(--color-signal);
+  vertical-align: baseline;
+}
+html:lang(ar) .signal-dot {
+  width: 0.13em;
+  height: 0.13em;
+  margin-inline-start: 0.06em;
+}
+/* labels inside the artboards are part of the artwork: keep them small */
+html:lang(ar) .lab-art .label,
+html:lang(ar) .lab-frame > .label {
+  font-size: 11px;
 }

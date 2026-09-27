@@ -24,7 +24,7 @@ export function Method({ t }: { t: Dictionary["method"] }) {
 
         <div className="relative mt-[clamp(56px,10vh,120px)]">
           {/* the loop: phases run left to right, then return underneath */}
-          <svg viewBox="0 0 1200 128" preserveAspectRatio="none" className="method-loop absolute inset-x-0 top-0 hidden h-[128px] w-full md:block" aria-hidden="true">
+          <svg viewBox="0 0 1200 128" preserveAspectRatio="none" className="method-loop absolute inset-x-0 top-0 hidden h-[128px] w-full md:block rtl:-scale-x-100" aria-hidden="true">
             <path d={LOOP} fill="none" stroke="var(--color-ink)" strokeOpacity=".22" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
             {!reduced && (
               <rect x="-4" y="-4" width="8" height="8" fill="var(--color-signal)">

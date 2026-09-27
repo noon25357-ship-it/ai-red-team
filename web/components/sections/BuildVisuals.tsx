@@ -5,6 +5,7 @@ import type { Dictionary } from "@/content/en";
 import { useInView, useReducedMotion } from "@/lib/hooks";
 
 type Layer = Dictionary["build"]["layers"][number];
+type UI = Dictionary["build"]["ui"];
 
 function VisualFrame({ title, note, children }: { title: string; note: string; children: React.ReactNode }) {
   return (
@@ -23,26 +24,26 @@ function VisualFrame({ title, note, children }: { title: string; note: string; c
 ---------------------------------------------------------------- */
 const SHARE_END = [14, 54, 24, 8];
 
-function AdArt({ i }: { i: number }) {
+function AdArt({ i, ui }: { i: number; ui: UI }) {
   if (i === 0)
     return (
       <div className="flex h-full flex-col justify-between bg-paper p-[9%]">
         <svg viewBox="0 0 100 60" className="w-full" aria-hidden="true">
           <path d="M4 56V26L30 10l26 16v30M56 56V32h40v24M4 56h92M18 56V40h12v16M66 42h10v8H66zM82 42h8v8h-8z" fill="none" stroke="var(--color-ink)" strokeWidth="1.3" />
         </svg>
-        <p className="display-md text-[clamp(11px,1.15vw,17px)] leading-[1.02]">Ready to move in.</p>
+        <p className="display-md text-[clamp(11px,1.15vw,17px)] leading-[1.02]">{ui.ads.a}</p>
       </div>
     );
   if (i === 1)
     return (
       <div className="flex h-full flex-col justify-between bg-palm p-[9%] text-stone">
-        <p className="label !text-[9px] opacity-70">North Riyadh</p>
+        <p className="label text-[9px] opacity-70">{ui.ads.region}</p>
         <div>
           <svg viewBox="0 0 100 40" className="mb-3 w-full" aria-hidden="true">
             <path d="M0 30h100M22 30V6M22 18h40M62 18v12" fill="none" stroke="currentColor" strokeWidth="1.2" opacity=".55" />
             <rect x="58" y="14" width="8" height="8" fill="var(--color-signal)" />
           </svg>
-          <p className="display-md text-[clamp(11px,1.15vw,17px)] leading-[1.02]">Minutes from King Salman Road.</p>
+          <p className="display-md text-[clamp(11px,1.15vw,17px)] leading-[1.02]">{ui.ads.b}</p>
         </div>
       </div>
     );
@@ -52,7 +53,7 @@ function AdArt({ i }: { i: number }) {
         <div className="absolute left-1/2 top-[16%] size-[34%] -translate-x-1/2 rounded-full bg-ink/80" />
         <div className="absolute left-1/2 top-[46%] h-[60%] w-[64%] -translate-x-1/2 rounded-t-[50%] bg-ink/80" />
         <p className="relative bg-stone px-1.5 py-1 text-[clamp(8px,0.75vw,11px)] font-semibold leading-tight">
-          Walk through it with me
+          {ui.ads.c}
         </p>
       </div>
     );
@@ -66,7 +67,7 @@ function AdArt({ i }: { i: number }) {
         <svg viewBox="0 0 10 10" className="size-3" aria-hidden="true">
           <path d="M2 1l7 4-7 4z" fill="currentColor" />
         </svg>
-        <p className="display-md text-[clamp(11px,1.15vw,17px)]">Phase II</p>
+        <p className="display-md text-[clamp(11px,1.15vw,17px)]">{ui.ads.d}</p>
       </div>
       <div className="flex justify-between">
         <span className="size-2 border-b border-l border-stone/60" />
@@ -76,7 +77,7 @@ function AdArt({ i }: { i: number }) {
   );
 }
 
-export function AcquisitionVisual({ layer }: { layer: Layer }) {
+export function AcquisitionVisual({ layer, ui }: { layer: Layer; ui: UI }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { rootMargin: "0px 0px -25% 0px" });
   const variants = layer.variants ?? [];
@@ -91,11 +92,13 @@ export function AcquisitionVisual({ layer }: { layer: Layer }) {
           return (
             <div key={v.id} className="group">
               <div className="flex items-baseline justify-between pb-2">
-                <span className="label text-ink">Variant {v.id}</span>
+                <span className="label text-ink">
+                  {ui.variant} {v.id}
+                </span>
                 <span
                   className={`label transition-opacity duration-500 ${inView ? "opacity-100 delay-[2400ms]" : "opacity-0"} ${win ? "text-ink" : "text-graphite"}`}
                 >
-                  {win ? "Scaling" : SHARE_END[i] < 10 ? "Paused" : "Testing"}
+                  {win ? ui.scaling : SHARE_END[i] < 10 ? ui.paused : ui.testing}
                 </span>
               </div>
               <div
@@ -103,7 +106,7 @@ export function AcquisitionVisual({ layer }: { layer: Layer }) {
                   inView && SHARE_END[i] < 10 ? "opacity-55 transition-opacity delay-[2400ms] duration-700" : ""
                 }`}
               >
-                <AdArt i={i} />
+                <AdArt i={i} ui={ui} />
               </div>
               <p className="mt-2.5 text-[13px] text-graphite">{v.hook}</p>
               <div className="mt-3 h-[3px] w-full bg-rule" aria-hidden="true">
@@ -112,7 +115,7 @@ export function AcquisitionVisual({ layer }: { layer: Layer }) {
                   style={{ width: `${share * (100 / 54)}%`, transitionDelay: `${300 + i * 60}ms` }}
                 />
               </div>
-              <p className="label mt-2 !text-[10px] text-graphite">Share of spend</p>
+              <p className="label mt-2 text-[10px] text-graphite">{ui.share}</p>
             </div>
           );
         })}
@@ -124,7 +127,7 @@ export function AcquisitionVisual({ layer }: { layer: Layer }) {
 /* ---------------------------------------------------------------
    02 Conversion — the page on the left, the event stream on the right.
 ---------------------------------------------------------------- */
-export function ConversionVisual({ layer }: { layer: Layer }) {
+export function ConversionVisual({ layer, ui }: { layer: Layer; ui: UI }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, rootMargin: "0px 0px -15% 0px" });
   const reduced = useReducedMotion();
@@ -159,14 +162,16 @@ export function ConversionVisual({ layer }: { layer: Layer }) {
               <span className="size-1.5 bg-ink/25" />
               <span className="size-1.5 bg-ink/25" />
             </span>
-            <span className="label !text-[10px] text-graphite">/villas/phase-ii</span>
+            <span className="label text-[10px] text-graphite" dir="ltr">
+              /villas/phase-ii
+            </span>
           </div>
           <div className="relative h-[300px] overflow-hidden">
             <div
               className="p-5 transition-transform duration-[1200ms] ease-[var(--ease-in-out-quart)]"
               style={{ transform: scrolled ? "translateY(calc(-100% + 300px))" : "none" }}
             >
-              <p className="label !text-[10px] text-graphite">{page.kicker}</p>
+              <p className="label text-[10px] text-graphite">{page.kicker}</p>
               <p className="display-md mt-2 max-w-[18ch] text-[19px] leading-[1.05]">{page.title}</p>
               <svg viewBox="0 0 200 70" className="mt-4 w-full border border-rule bg-stone" aria-hidden="true">
                 <path d="M16 62V30l44-20 44 20v32M104 62V36h80v26M8 62h184M40 62V44h14v18M124 44h14v10h-14zM154 44h14v10h-14z" fill="none" stroke="var(--color-ink)" strokeWidth="1" />
@@ -176,10 +181,11 @@ export function ConversionVisual({ layer }: { layer: Layer }) {
                   <div key={f} className="flex h-8 items-center border border-ink/30 bg-stone px-2 text-[11px] text-graphite">
                     {typing && i === 0 ? (
                       <span className="text-ink">
-                        Abdullah A.<span className="ms-px inline-block h-3 w-px animate-pulse bg-ink align-middle" />
+                        {ui.sampleName}
+                        <span className="ms-px inline-block h-3 w-px animate-pulse bg-ink align-middle" />
                       </span>
                     ) : sent && i > 0 ? (
-                      <span className="text-ink">{i === 1 ? "05• ••• ••••" : "Thursday"}</span>
+                      <span className="text-ink">{i === 1 ? <span dir="ltr">05• ••• ••••</span> : ui.sampleDay}</span>
                     ) : (
                       f
                     )}
@@ -195,7 +201,7 @@ export function ConversionVisual({ layer }: { layer: Layer }) {
 
         {/* the event stream */}
         <div className="flex flex-col border border-rule bg-stone/60">
-          <p className="label border-b border-rule px-3 py-2 text-graphite">Event stream</p>
+          <p className="label border-b border-rule px-3 py-2 text-graphite">{ui.eventStream}</p>
           <ol className="flex-1">
             {events.map((e, i) => {
               const on = step > i;
@@ -217,9 +223,9 @@ export function ConversionVisual({ layer }: { layer: Layer }) {
             {dests.map((d) => (
               <span
                 key={d}
-                className={`label border px-2 py-1 !text-[10px] transition-colors duration-500 ${synced ? "border-ink bg-ink text-stone" : "border-rule text-graphite"}`}
+                className={`label border px-2 py-1 text-[10px] transition-colors duration-500 ${synced ? "border-ink bg-ink text-stone" : "border-rule text-graphite"}`}
               >
-                {synced ? "↳ " : ""}
+                {synced ? `${ui.synced} ` : ""}
                 {d}
               </span>
             ))}
@@ -254,7 +260,7 @@ function band(x0: number, a: { y0: number; y1: number }, x1: number, b: { y0: nu
   return `M${x0} ${a.y0} C${m} ${a.y0} ${m} ${b.y0} ${x1} ${b.y0} L${x1} ${b.y1} C${m} ${b.y1} ${m} ${a.y1} ${x0} ${a.y1} Z`;
 }
 
-export function IntelligenceVisual({ layer }: { layer: Layer }) {
+export function IntelligenceVisual({ layer, ui }: { layer: Layer; ui: UI }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { rootMargin: "0px 0px -20% 0px" });
   const [hover, setHover] = useState<number | null>(null);
@@ -302,7 +308,7 @@ export function IntelligenceVisual({ layer }: { layer: Layer }) {
           <svg
             viewBox={`0 0 1000 ${H}`}
             preserveAspectRatio="none"
-            className="absolute inset-0 h-full w-full transition-[clip-path] duration-[1800ms] ease-[var(--ease-in-out-quart)]"
+            className="absolute inset-0 h-full w-full transition-[clip-path] duration-[1800ms] ease-[var(--ease-in-out-quart)] rtl:-scale-x-100"
             style={{ clipPath: inView ? "inset(0 0 0 0)" : "inset(0 100% 0 0)" }}
             aria-hidden="true"
           >
@@ -322,7 +328,7 @@ export function IntelligenceVisual({ layer }: { layer: Layer }) {
             <span
               key={s}
               className="label absolute -top-1 hidden -translate-y-full text-graphite sm:block"
-              style={i === stages.length - 1 ? { right: 0 } : { left: `${([X.leads, X.qual][i] / 1000) * 100}%` }}
+              style={i === stages.length - 1 ? { insetInlineEnd: 0 } : { insetInlineStart: `${([X.leads, X.qual][i] / 1000) * 100}%` }}
             >
               {s}
             </span>
@@ -330,7 +336,7 @@ export function IntelligenceVisual({ layer }: { layer: Layer }) {
         </div>
       </div>
       <p className="label mt-4 text-graphite sm:hidden" aria-hidden="true">
-        {["Channel", ...stages].join(" → ")}
+        {[ui.channel, ...stages].join(ui.synced === "↳" ? " → " : " ← ")}
       </p>
     </VisualFrame>
   );

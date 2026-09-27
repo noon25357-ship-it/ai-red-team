@@ -25,13 +25,14 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     name: site.name,
     url: site.url,
     description: t.meta.description,
+    inLanguage: locale,
     address: { "@type": "PostalAddress", addressLocality: site.city, addressCountry: "SA" },
   };
 
   return (
     <>
       <a href="#main" className="skip-link">
-        Skip to content
+        {t.nav.skip}
       </a>
       <Nav t={t.nav} />
       <main id="main">

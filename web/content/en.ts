@@ -21,6 +21,11 @@ export const en = {
     cta: "Build your system",
     menu: "Menu",
     close: "Close",
+    skip: "Skip to content",
+    switchLabel: "عربي",
+    switchHref: "/",
+    switchLang: "ar",
+    switchA11y: "النسخة العربية",
   },
 
   hero: {
@@ -76,6 +81,25 @@ export const en = {
   },
 
   build: {
+    ui: {
+      variant: "Variant",
+      scaling: "Scaling",
+      paused: "Paused",
+      testing: "Testing",
+      share: "Share of spend",
+      eventStream: "Event stream",
+      sampleName: "Abdullah A.",
+      sampleDay: "Thursday",
+      synced: "↳",
+      channel: "Channel",
+      ads: {
+        a: "Ready to move in.",
+        region: "North Riyadh",
+        b: "Minutes from King Salman Road.",
+        c: "Walk through it with me",
+        d: "Phase II",
+      },
+    },
     kicker: "What we build",
     title: "Three layers. One system.",
     intro:
@@ -213,6 +237,7 @@ export const en = {
     intro:
       "We shoot, generate, voice and edit in one pipeline. A single product brief becomes a complete creative system — cut for every placement, and tested against itself.",
     brief: "Sample brief",
+    altLang: "ar",
     product: { name: "Oud Nº 7", detail: "Eau de parfum · 50 ml", arabic: "عود ٧" },
     frames: [
       { id: "ugc", label: "UGC", format: "9:16" },
@@ -233,7 +258,10 @@ export const en = {
       shortTitle: "3 ways to wear it",
       staticCta: "Shop now",
       landingTitle: "Oud, made quiet.",
-      landingCta: "Discover Nº 7",
+      landingCta: "Discover Nº 7 →",
+      shortItems: ["Wrist", "Collar", "Scarf"],
+      landingNav: ["Collection", "Story", "Stores"],
+      voiceLang: "AR ▸ EN",
     },
   },
 
@@ -243,6 +271,7 @@ export const en = {
     intro:
       "Every lead passes through agents that read, qualify and act — in seconds, in Arabic or English, with a person in the loop wherever judgement matters.",
     replay: "Replay",
+    status: { running: "Running", complete: "Complete", sequence: "Sequence" },
     steps: [
       "A lead enters.",
       "AI reads the source.",
@@ -333,6 +362,13 @@ export const en = {
     title: "We publish numbers when clients sign them off.",
     body: "Every engagement reports on the same five measures. Case studies appear here once they're approved — no rounded-up figures, no borrowed logos.",
     columns: { measure: "Measure", value: "Published value" },
+    metrics: {
+      revenue: "Revenue attributed",
+      leads: "Leads generated",
+      conversion: "Conversion improvement",
+      cpql: "Cost per qualified lead",
+      hours: "Hours automated",
+    } as Record<string, string>,
     pending: "Awaiting client sign-off",
     casesLabel: "Case studies",
     casesEmpty: "Case studies are published here only with written client approval.",

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Dictionary } from "@/content/en";
-import { Arrow } from "../ui/Logo";
+import { Arrow, SignalDot } from "../ui/Logo";
 import { HeroSystem } from "./HeroSystem";
 
 export function Hero({ t }: { t: Dictionary["hero"] }) {
@@ -33,7 +33,7 @@ export function Hero({ t }: { t: Dictionary["hero"] }) {
             <span key={line} className="reveal-line" style={{ ["--i" as string]: i, ["--d" as string]: "150ms" }}>
               <span>
                 {line}
-                {i === t.title.length - 1 && <span className="text-signal">.</span>}
+                {i === t.title.length - 1 && <SignalDot />}
               </span>
             </span>
           ))}

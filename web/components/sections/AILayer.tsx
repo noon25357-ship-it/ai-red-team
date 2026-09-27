@@ -57,7 +57,7 @@ export function AILayer({ t }: { t: Dictionary["ai"] }) {
 
         <div ref={stage} className="mt-[clamp(56px,9vh,110px)] grid gap-10 md:grid-cols-12 md:gap-6">
           {/* steps */}
-          <ol className="md:col-span-5" aria-label="Sequence">
+          <ol className="md:col-span-5" aria-label={t.status.sequence}>
             {t.steps.map((s, i) => {
               const state = i < step ? "done" : i === step ? "now" : "next";
               return (
@@ -123,10 +123,11 @@ export function AILayer({ t }: { t: Dictionary["ai"] }) {
             </div>
             <div className="mt-4 flex items-center justify-between">
               <span className="label text-fog" aria-live="polite">
-                {step < 0 ? "" : done ? "Complete · 7 / 7" : `Running · ${step + 1} / ${t.steps.length}`}
+                {step < 0 ? "" : done ? `${t.status.complete} · ${t.steps.length} / ${t.steps.length}` : `${t.status.running} · ${step + 1} / ${t.steps.length}`}
               </span>
               <button
                 type="button"
+                id="ai-replay"
                 onClick={() => {
                   setStep(-1);
                   setRun((r) => r + 1);
