@@ -38,7 +38,7 @@ const MOBILE: Pt[] = [
   { x: 0.5, y: 0.08 },
 ];
 // Probability that a visitor is still in the system when it reaches node k.
-const LABEL_CLEAR = { ltr: 104, rtl: 150 };
+const LABEL_CLEAR = { ltr: 124, rtl: 178 };
 const SURVIVAL = [1, 1, 0.8, 0.5, 0.36, 0.2];
 const HOLD = [900, 900, 1100, 1300, 1500, 2600];
 
@@ -222,7 +222,7 @@ export function HeroSystem({ nodes, label, note, a11y }: { nodes: SystemNode[]; 
           {nodes.map((n, i) => {
             const p = route.pts[route.at[i]];
             // flip labels to the left when the status line would run off the edge
-            const flip = !mobile && (rtl ? p.x < 250 : p.x > size.w - 230);
+            const flip = !mobile && (rtl ? p.x < 290 : p.x > size.w - 260);
             return (
               <div
                 key={n.id}

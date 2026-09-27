@@ -37,7 +37,7 @@ function AdArt({ i, ui }: { i: number; ui: UI }) {
   if (i === 1)
     return (
       <div className="flex h-full flex-col justify-between bg-palm p-[9%] text-stone">
-        <p className="label text-[9px] opacity-70">{ui.ads.region}</p>
+        <p className="label text-[10px] opacity-70">{ui.ads.region}</p>
         <div>
           <svg viewBox="0 0 100 40" className="mb-3 w-full" aria-hidden="true">
             <path d="M0 30h100M22 30V6M22 18h40M62 18v12" fill="none" stroke="currentColor" strokeWidth="1.2" opacity=".55" />
@@ -52,7 +52,7 @@ function AdArt({ i, ui }: { i: number; ui: UI }) {
       <div className="relative flex h-full flex-col justify-end overflow-hidden bg-sand p-[9%]">
         <div className="absolute left-1/2 top-[16%] size-[34%] -translate-x-1/2 rounded-full bg-ink/80" />
         <div className="absolute left-1/2 top-[46%] h-[60%] w-[64%] -translate-x-1/2 rounded-t-[50%] bg-ink/80" />
-        <p className="relative bg-stone px-1.5 py-1 text-[clamp(8px,0.75vw,11px)] font-semibold leading-tight">
+        <p className="relative bg-stone px-1.5 py-1 text-[clamp(10px,0.85vw,12px)] font-semibold leading-tight">
           {ui.ads.c}
         </p>
       </div>
@@ -115,7 +115,7 @@ export function AcquisitionVisual({ layer, ui }: { layer: Layer; ui: UI }) {
                   style={{ width: `${share * (100 / 54)}%`, transitionDelay: `${300 + i * 60}ms` }}
                 />
               </div>
-              <p className="label mt-2 text-[10px] text-graphite">{ui.share}</p>
+              <p className="label mt-2 text-[11px] text-graphite">{ui.share}</p>
             </div>
           );
         })}
@@ -162,7 +162,7 @@ export function ConversionVisual({ layer, ui }: { layer: Layer; ui: UI }) {
               <span className="size-1.5 bg-ink/25" />
               <span className="size-1.5 bg-ink/25" />
             </span>
-            <span className="label text-[10px] text-graphite" dir="ltr">
+            <span className="label text-[11px] text-graphite" dir="ltr">
               /villas/phase-ii
             </span>
           </div>
@@ -171,7 +171,7 @@ export function ConversionVisual({ layer, ui }: { layer: Layer; ui: UI }) {
               className="p-5 transition-transform duration-[1200ms] ease-[var(--ease-in-out-quart)]"
               style={{ transform: scrolled ? "translateY(calc(-100% + 300px))" : "none" }}
             >
-              <p className="label text-[10px] text-graphite">{page.kicker}</p>
+              <p className="label text-[11px] text-graphite">{page.kicker}</p>
               <p className="display-md mt-2 max-w-[18ch] text-[19px] leading-[1.05]">{page.title}</p>
               <svg viewBox="0 0 200 70" className="mt-4 w-full border border-rule bg-stone" aria-hidden="true">
                 <path d="M16 62V30l44-20 44 20v32M104 62V36h80v26M8 62h184M40 62V44h14v18M124 44h14v10h-14zM154 44h14v10h-14z" fill="none" stroke="var(--color-ink)" strokeWidth="1" />
@@ -213,7 +213,7 @@ export function ConversionVisual({ layer, ui }: { layer: Layer; ui: UI }) {
                   <span className={`mt-1 size-2 shrink-0 transition-colors ${on ? "bg-signal" : "bg-ink/30"}`} />
                   <span className="min-w-0">
                     <span className="block font-mono text-[12px] text-ink">{e.name}</span>
-                    <span className="block truncate font-mono text-[11px] text-graphite">{e.detail}</span>
+                    <span className="block truncate font-mono text-[12px] text-graphite">{e.detail}</span>
                   </span>
                 </li>
               );
@@ -223,7 +223,7 @@ export function ConversionVisual({ layer, ui }: { layer: Layer; ui: UI }) {
             {dests.map((d) => (
               <span
                 key={d}
-                className={`label border px-2 py-1 text-[10px] transition-colors duration-500 ${synced ? "border-ink bg-ink text-stone" : "border-rule text-graphite"}`}
+                className={`label border px-2 py-1 text-[11px] transition-colors duration-500 ${synced ? "border-ink bg-ink text-stone" : "border-rule text-graphite"}`}
               >
                 {synced ? `${ui.synced} ` : ""}
                 {d}

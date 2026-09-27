@@ -20,6 +20,13 @@ const FRAMES: Record<string, { x: number; y: number; w: number; h: number }> = {
   landing: { x: 376, y: 560, w: 560, h: 320 },
 };
 
+/*
+  Voice-over waveform, computed once with integer values. Rendering raw floats
+  (e.g. 81.94632915310568%) made the server HTML and the client differ after the
+  browser normalised the style attribute — a hydration mismatch.
+*/
+const WAVE = Array.from({ length: 46 }, (_, i) => Math.round(18 + Math.abs(Math.sin(i * 1.7) * 62) + (i % 5) * 4));
+
 const cq = (v: number) => `${((v / CW) * 100).toFixed(3)}cqw`;
 
 export function Bottle({ className = "", glass = "#7a4119", cap = "#cdbfa6" }: { className?: string; glass?: string; cap?: string }) {
@@ -61,7 +68,7 @@ function AltLang({ t, className = "", children }: { t: T; className?: string; ch
 
 function FrameLabel({ label, format }: { label: string; format: string }) {
   return (
-    <span className="label mb-1.5 flex items-center justify-between gap-2 text-[10px] text-graphite">
+    <span className="label mb-1.5 flex items-center justify-between gap-2 text-[11px] text-graphite">
       <span className="text-ink">{label}</span>
       <span>{format}</span>
     </span>
@@ -134,7 +141,7 @@ function Art({ id, t }: { id: string; t: T }) {
               <span
                 key={i}
                 className="lab-wave w-[3px] flex-1 bg-ink"
-                style={{ height: `${18 + Math.abs(Math.sin(i * 1.7) * 62) + (i % 5) * 4}%`, animationDelay: `${(i % 9) * -0.13}s` }}
+                style={{ height: `${WAVE[i]}%`, animationDelay: `${-(i % 9) * 130}ms` }}
               />
             ))}
           </div>
@@ -277,7 +284,7 @@ export function Lab({ t }: { t: T }) {
             className="absolute z-10 flex flex-col"
             style={{ left: cq(PRODUCT.x), top: cq(PRODUCT.y), width: cq(PRODUCT.w) }}
           >
-            <span className="label mb-1.5 flex justify-between text-[10px] text-graphite">
+            <span className="label mb-1.5 flex justify-between text-[11px] text-graphite">
               <span className="text-ink">{t.brief}</span>
               <span>01 / 01</span>
             </span>
@@ -286,7 +293,7 @@ export function Lab({ t }: { t: T }) {
               <div className="flex items-end justify-between">
                 <div>
                   <p className="display text-[15px]">{t.product.name}</p>
-                  <p className="text-[12px] text-graphite">{t.product.detail}</p>
+                  <p className="text-[13px] text-graphite">{t.product.detail}</p>
                 </div>
                 <AltLang t={t} className="text-[15px]">
                   {t.product.arabic}
@@ -299,7 +306,7 @@ export function Lab({ t }: { t: T }) {
         {/* Mobile: the same system as a contact sheet */}
         <div className="mt-14 md:hidden">
           <div className="border border-ink bg-paper p-4">
-            <span className="label flex justify-between text-[10px] text-graphite">
+            <span className="label flex justify-between text-[11px] text-graphite">
               <span className="text-ink">{t.brief}</span>
               <span>{t.product.detail}</span>
             </span>

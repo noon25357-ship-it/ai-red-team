@@ -72,7 +72,9 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
   check("All in-page anchors have targets", missingTargets.length === 0, missingTargets.join(", "));
   check("All links have accessible names", links.every((l) => l.name.length > 0));
   const mailtos = links.filter((l) => l.href.startsWith("mailto:"));
-  check("Conversation CTAs are mailto links with subject", mailtos.length >= 4 && mailtos.every((l) => l.href.includes("subject=")), `${mailtos.length} links`);
+  check("Offer CTAs are mailto links with subject", mailtos.length >= 3 && mailtos.every((l) => l.href.includes("subject=")), `${mailtos.length} links`);
+  const order = await page.evaluate(() => [...document.querySelectorAll("main > section")].map((s) => s.id).join(","));
+  check("Services and one-team sections follow the system", /system,services,one-team/.test(order) && order.endsWith("final,contact"), order);
   const unnamedButtons = await page.evaluate(() => [...document.querySelectorAll("button")].filter((b) => !(b.getAttribute("aria-label") || b.textContent).trim()).length);
   check("All buttons have accessible names", unnamedButtons === 0, String(unnamedButtons));
 
@@ -175,15 +177,24 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
   const theme = await page.getAttribute("header", "data-nav-theme");
   check("Nav switches to dark theme over dark sections", theme === "dark", theme);
 
-  // primary CTA lands on the resolved final state
+  // primary CTA lands on the contact form
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await page.click('header nav a.btn[href="#contact"]');
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(1600);
+  const formTop = await page.evaluate(() => document.querySelector("#contact form").getBoundingClientRect().top);
+  check("CTA → contact form in view", formTop > 0 && formTop < 900, `${Math.round(formTop)}px`);
+
+  // the finale still resolves fully when scrolled through
+  await page.evaluate(() => {
+    const f = document.getElementById("final");
+    window.scrollTo({ top: f.offsetTop + f.offsetHeight - window.innerHeight, behavior: "instant" });
+  });
+  await page.waitForTimeout(600);
   const finalState = await page.evaluate(() => ({
     p: parseFloat(getComputedStyle(document.querySelector("#final")).getPropertyValue("--p")),
     btnOpacity: parseFloat(getComputedStyle(document.querySelector(".final-cta")).opacity),
   }));
-  check("CTA → final section, fully resolved", finalState.p > 0.8 && finalState.btnOpacity > 0.95, JSON.stringify(finalState));
+  check("Finale resolves at the end of its scroll", finalState.p > 0.95 && finalState.btnOpacity > 0.95, JSON.stringify(finalState));
   await ctx.close();
 }
 
@@ -246,6 +257,30 @@ const scrollToEl = (page, sel) => page.evaluate((s) => document.querySelector(s)
   await page.keyboard.press("Tab");
   const skip = await page.evaluate(() => document.activeElement?.className);
   check("Keyboard: first Tab reaches skip link", String(skip).includes("skip-link"));
+  await ctx.close();
+}
+
+/* ---------- 5b. Contact form ---------- */
+{
+  const { ctx, page, errors } = await open({ width: 1440, height: 900 });
+  await scrollToEl(page, "#contact");
+  await page.click("#contact button[type=submit]");
+  const invalid = await page.evaluate(() => document.querySelectorAll("#contact [aria-invalid=true]").length);
+  const focused = await page.evaluate(() => document.activeElement?.id);
+  check("Contact: empty submit flags all 5 fields and focuses the first", invalid === 5 && focused === "contact-name", `${invalid} invalid, focus ${focused}`);
+  await page.fill("#contact-name", "Test");
+  await page.fill("#contact-company", "Test Co");
+  await page.fill("#contact-email", "not-an-email");
+  await page.selectOption("#contact-sector", { index: 1 });
+  await page.fill("#contact-need", "Leads never reach sales");
+  await page.click("#contact button[type=submit]");
+  check("Contact: invalid email is rejected", (await page.getAttribute("#contact-email", "aria-invalid")) === "true");
+  await page.fill("#contact-email", "test@example.org");
+  await page.click("#contact button[type=submit]");
+  await page.waitForTimeout(300);
+  const href = await page.getAttribute("#contact-mailto", "href").catch(() => null);
+  check("Contact: valid submit composes the email", !!href && href.startsWith("mailto:") && href.includes("body=") && decodeURIComponent(href).includes("Test Co"), href?.slice(0, 60));
+  check("Contact: no errors", errors.length === 0, errors.join(" | "));
   await ctx.close();
 }
 

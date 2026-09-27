@@ -231,6 +231,88 @@ export const en = {
     ],
   },
 
+  services: {
+    kicker: "What we build for you",
+    title: "What do we actually build for you?",
+    intro: "Five parts that work as one system. You can start with one — we design it from day one to connect with the rest.",
+    receive: "You get",
+    cta: "Discuss what you need",
+    items: [
+      {
+        name: "Ads and content",
+        body: "Meta and Google campaigns, plus creative that sells: shoots, UGC, motion and voice-over in Arabic and English.",
+        outputs: ["Campaign and budget management", "New ad variants every week", "Content cut for every placement"],
+      },
+      {
+        name: "Landing pages and conversion",
+        body: "Fast landing pages for each offer and audience, fully tracked and continuously tested to lift conversion.",
+        outputs: ["Arabic and English landing pages", "Server-side Meta and Google tracking", "A/B testing"],
+      },
+      {
+        name: "AI agents and follow-up",
+        body: "Agents that answer leads within minutes on WhatsApp and your site, ask the right questions and book meetings.",
+        outputs: ["Reply and qualification agent", "Automated follow-up messages", "Serious leads routed to your team"],
+      },
+      {
+        name: "CRM and automation",
+        body: "Every lead in one place with its source and conversations, and the repetitive work running on its own.",
+        outputs: ["CRM setup or integration", "A clear sales pipeline", "Automated alerts and tasks"],
+      },
+      {
+        name: "Measurement and optimization",
+        body: "One dashboard that shows what actually drives revenue, and a regular review that turns numbers into decisions.",
+        outputs: ["Spend-to-revenue dashboard", "Revenue attributed to campaigns", "Monthly review and optimization"],
+      },
+    ],
+  },
+
+  oneTeam: {
+    kicker: "One team",
+    title: "From the first ad to the closed deal",
+    intro: "Instead of coordinating an ad agency, a designer, a developer and a CRM vendor — each seeing one piece — you work with one team that owns the whole path.",
+    before: {
+      label: "The usual way",
+      parties: ["Ad agency", "Content studio", "Web developer", "CRM vendor", "Sales team"],
+      gap: "Manual handoff",
+      caption: "Five parties, five reports, and nobody owns the result.",
+    },
+    after: {
+      label: "With Nizam",
+      stages: ["Ad", "Content", "Landing page", "Follow-up", "Deal"],
+      caption: "One team, one data trail, one owner of the outcome.",
+    },
+    points: [
+      { name: "One point of contact", body: "One person to talk to about everything, from the campaign to sales." },
+      { name: "Connected data", body: "What happens in the ad reaches sales, and what happens in sales improves the ad." },
+      { name: "Faster decisions", body: "No coordination meetings between vendors, no waiting on handoffs." },
+    ],
+  },
+
+  contact: {
+    kicker: "Contact",
+    title: "Let's build your system.",
+    body: "Tell us about your company and where growth stalls. We'll review it and get back to you to set up an intro call.",
+    stepsLabel: "What happens next",
+    steps: ["You send us the details", "We set up an intro call", "We propose the right system for you"],
+    form: {
+      name: "Name",
+      company: "Company",
+      email: "Work email",
+      sector: "Sector",
+      sectorPlaceholder: "Choose a sector",
+      sectors: ["Real estate", "Clinics", "Education", "B2B services", "Logistics", "SaaS", "E-commerce", "Other"],
+      need: "What do you want to build?",
+      needPlaceholder: "e.g. we run ads, but leads never reach sales…",
+      submit: "Send request",
+      required: "This field is required",
+      invalidEmail: "Enter a valid email",
+      sent: "Your message is ready in your email app — send it from there and we'll reply.",
+      fallback: "Email app didn't open? Open the message",
+      whatsapp: "Message us on WhatsApp",
+      subject: "Growth system request",
+    },
+  },
+
   lab: {
     kicker: "Creative AI lab",
     title: ["One product.", "Every format it needs."],

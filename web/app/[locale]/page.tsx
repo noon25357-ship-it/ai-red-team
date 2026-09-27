@@ -6,6 +6,9 @@ import { Problem } from "@/components/sections/Problem";
 import { Build } from "@/components/sections/Build";
 import { Engine } from "@/components/sections/Engine";
 import { Lab } from "@/components/sections/Lab";
+import { Services } from "@/components/sections/Services";
+import { OneTeam } from "@/components/sections/OneTeam";
+import { Contact } from "@/components/sections/Contact";
 import { AILayer } from "@/components/sections/AILayer";
 import { Method } from "@/components/sections/Method";
 import { Offers } from "@/components/sections/Offers";
@@ -40,12 +43,15 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         <Problem t={t.problem} />
         <Build t={t.build} />
         <Engine t={t.engine} />
+        <Services t={t.services} />
+        <OneTeam t={t.oneTeam} />
         <Lab t={t.lab} />
         <AILayer t={t.ai} />
         <Method t={t.method} />
         <Offers t={t.offers} />
         <Proof t={t.proof} />
         <Final t={t.final} />
+        <Contact t={t.contact} />
       </main>
       <Footer t={t.footer} nav={t.nav} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

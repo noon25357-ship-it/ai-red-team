@@ -4,7 +4,6 @@ import { useRef } from "react";
 import type { Dictionary } from "@/content/en";
 import { useStickyProgress } from "@/lib/hooks";
 import { Arrow, SignalDot } from "../ui/Logo";
-import { mailto } from "@/lib/contact";
 
 // Where each part of the system is scattered at the start (in % of the stage).
 const SCATTER = [
@@ -40,7 +39,6 @@ export function Final({ t }: { t: Dictionary["final"] }) {
 
   return (
     <section ref={ref} id="final" aria-labelledby="final-title" data-theme="dark" className="final relative h-[240vh] bg-night text-stone">
-      <div id="contact" className="pointer-events-none absolute inset-x-0 bottom-0 h-[100svh]" aria-hidden="true" />
       <div className="final-stage sticky top-0 h-[100svh] overflow-hidden">
         <div role="img" aria-label={t.a11y} className="absolute inset-0">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="final-line absolute inset-0 h-full w-full" aria-hidden="true">
@@ -86,7 +84,7 @@ export function Final({ t }: { t: Dictionary["final"] }) {
             </span>
           </h2>
           <div className="final-cta mt-9 flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-10">
-            <a href={mailto(t.mailSubject)} className="btn btn-invert w-max">
+            <a href="#contact" className="btn btn-invert w-max">
               {t.cta}
               <Arrow />
             </a>

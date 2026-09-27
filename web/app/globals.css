@@ -97,7 +97,7 @@ body {
 
 .label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -336,7 +336,7 @@ body {
   left: 14px;
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -377,7 +377,7 @@ body {
 .hero-node-status.is-flip {
   /* flipped nodes sit at the top of a riser: keep both lines above the rail */
   top: auto;
-  bottom: 26px;
+  bottom: 29px;
   padding: 2px 0 2px 6px;
 }
 @media (max-width: 719px) {
@@ -473,7 +473,7 @@ body {
 }
 .problem-note {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-graphite);
@@ -819,7 +819,7 @@ html:lang(ar) .label {
   /* a monospace space between Arabic words reads as a gap; labels use Plex Arabic */
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 12.5px;
+  font-size: 13.5px;
   line-height: 1.55;
   text-transform: none;
 }
@@ -855,13 +855,13 @@ html:lang(ar) .problem-name {
 }
 html:lang(ar) .problem-note {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14px;
   text-transform: none;
 }
 html:lang(ar) .hero-node-label,
 html:lang(ar) .hero-node-status {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 15.5px;
   text-transform: none;
   line-height: 1.4;
 }
@@ -870,7 +870,7 @@ html:lang(ar) .hero-node-label {
 }
 html:lang(ar) .final-label {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14px;
   text-transform: none;
 }
 
@@ -904,7 +904,7 @@ html:lang(ar) .final-label {
   padding: 2px 6px 2px 0;
 }
 html:lang(ar) .hero-node-status.is-flip {
-  bottom: 30px;
+  bottom: 34px;
 }
 
 /* Problem: the broken links drift with their rows */
@@ -981,5 +981,89 @@ html:lang(ar) .signal-dot {
 /* labels inside the artboards are part of the artwork: keep them small */
 html:lang(ar) .lab-art .label,
 html:lang(ar) .lab-frame > .label {
-  font-size: 11px;
+  font-size: 12px;
+}
+
+@media (max-width: 719px) {
+  html:lang(ar) .hero-node-label,
+  html:lang(ar) .hero-node-status {
+    font-size: 14.5px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Services, one team, contact
+------------------------------------------------------------------- */
+.service-row:hover .service-mark {
+  background: var(--color-signal);
+}
+.one-gap {
+  height: 1.5px;
+  background: repeating-linear-gradient(to right, var(--color-ink) 0 3px, transparent 3px 7px);
+  opacity: 0.35;
+  clip-path: inset(0 30% 0 30%);
+}
+.one-flow {
+  inset: auto 0 0 0;
+  height: 3px;
+}
+.one-flow i {
+  top: 0;
+  height: 3px;
+  animation-duration: 6s;
+}
+.one-flow i::after {
+  width: 48px;
+  height: 3px;
+  box-shadow: none;
+}
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 0 12px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-rule-dark);
+  border-radius: 0;
+  color: var(--color-stone);
+  font-size: 17px;
+  line-height: 1.5;
+  transition: border-color 0.3s ease;
+  appearance: none;
+}
+.contact-form select {
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-fog) 50%), linear-gradient(-45deg, transparent 50%, var(--color-fog) 50%);
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  background-position: calc(100% - 6px) 55%, 100% 55%;
+}
+[dir="rtl"] .contact-form select {
+  background-position: 6px 55%, 12px 55%;
+}
+.contact-form select option {
+  color: var(--color-ink);
+}
+.contact-form textarea {
+  resize: vertical;
+  min-height: 112px;
+}
+.contact-form ::placeholder {
+  color: rgb(154 157 152 / 0.7);
+}
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-bottom-color: var(--color-stone);
+}
+.contact-form input:focus-visible,
+.contact-form select:focus-visible,
+.contact-form textarea:focus-visible {
+  box-shadow: 0 2px 0 0 var(--color-signal);
+}
+.contact-form [aria-invalid="true"] {
+  border-bottom-color: var(--color-signal);
 }
