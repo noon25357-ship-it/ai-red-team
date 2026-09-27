@@ -4,6 +4,7 @@
   },
   "type": "module",
   "scripts": {
-    "jev:smoke": "node --env-file-if-exists=.env jev/smoke-test.mjs"
+    "jev:smoke": "node --env-file-if-exists=.env jev/smoke-test.mjs",
+    "setup:key": "bash scripts/setup-typesafe-key.sh"
   }
 }
