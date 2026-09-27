@@ -1,0 +1,26 @@
+{
+  "name": "nizam-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit",
+    "test:e2e": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "next": "15.5.26",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "playwright-core": "1.56.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5.6"
+  }
+}

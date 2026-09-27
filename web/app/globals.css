@@ -1,0 +1,781 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Tokens
+   Limestone is the ground. Ink is the voice. Night is the machine room.
+   Signal is reserved for data that is moving through the system —
+   never for decoration, never for body text on light surfaces.
+------------------------------------------------------------------- */
+@theme {
+  --color-stone: #e7e6e1;
+  --color-paper: #f2f1ed;
+  --color-ink: #121413;
+  --color-graphite: #585b57;
+  --color-rule: rgb(18 20 19 / 0.14);
+  --color-night: #0c0d0d;
+  --color-night-2: #151716;
+  --color-fog: #9a9d98;
+  --color-rule-dark: rgb(231 230 225 / 0.14);
+  --color-signal: #ff5316;
+  --color-sand: #cdbfa6;
+  --color-palm: #1d3a2f;
+
+  --font-display: var(--font-archivo), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+  --font-arabic: var(--font-plex-arabic), "Geeza Pro", sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+:root {
+  --gutter: clamp(16px, 4vw, 56px);
+  --nav-h: 64px;
+  color-scheme: light;
+}
+
+html {
+  background: var(--color-stone);
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-padding-top: var(--nav-h);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-stone);
+  overflow-x: clip;
+}
+
+:lang(ar) body,
+.font-arabic {
+  font-family: var(--font-arabic);
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-stone);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 3px;
+}
+
+@layer components {
+/* ------------------------------------------------------------------
+   Type system
+------------------------------------------------------------------- */
+.display {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.86;
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-variation-settings: "wdth" 112;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lede {
+  font-size: clamp(18px, 1.45vw, 22px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.shell {
+  width: 100%;
+  max-width: 1520px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ------------------------------------------------------------------
+   Buttons — square, heavy, with a travelling arrow
+------------------------------------------------------------------- */
+.btn {
+  --btn-bg: var(--color-ink);
+  --btn-fg: var(--color-stone);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 0 22px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.005em;
+  border-radius: 2px;
+  isolation: isolate;
+  overflow: hidden;
+  transition: color 0.35s var(--ease-out-expo);
+}
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.btn:hover::before {
+  transform: scaleX(1);
+}
+.btn:hover {
+  color: var(--color-ink);
+}
+.btn .arrow {
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.btn:hover .arrow {
+  transform: translateX(4px);
+}
+[data-nav-theme="dark"] .btn,
+.btn-invert {
+  --btn-bg: var(--color-stone);
+  --btn-fg: var(--color-ink);
+}
+
+.link-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  font-weight: 500;
+  font-size: 15px;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+  background-position: 0 calc(50% + 12px);
+  background-repeat: no-repeat;
+  transition: background-size 0.4s var(--ease-out-expo);
+}
+.link-quiet:hover {
+  background-size: 0% 1px;
+  background-position: 100% calc(50% + 12px);
+}
+
+}
+
+/* ------------------------------------------------------------------
+   Reveal primitives (driven by data-inview set in JS)
+------------------------------------------------------------------- */
+.reveal-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+.reveal-line > span {
+  display: block;
+  transform: translateY(105%);
+  transition: transform 1.1s var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 90ms + var(--d, 0ms));
+}
+[data-inview="true"] .reveal-line > span,
+.is-ready .reveal-line > span {
+  transform: none;
+}
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 0.9s var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 70ms + var(--d, 0ms));
+}
+[data-inview="true"] .fade-up,
+.is-ready .fade-up {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
+  .reveal-line > span,
+  .fade-up {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Hairline grid used as a structural backdrop in a few sections */
+.hairline-cols {
+  background-image: linear-gradient(to right, var(--color-rule) 1px, transparent 1px);
+  background-size: calc((100% - 2 * var(--gutter)) / 12) 100%;
+  background-position: var(--gutter) 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 16px;
+  top: -100px;
+  z-index: 100;
+  padding: 12px 16px;
+  background: var(--color-ink);
+  color: var(--color-stone);
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+/* ------------------------------------------------------------------
+   Hero
+------------------------------------------------------------------- */
+.hero-title {
+  font-size: clamp(52px, min(8.35vw, 14.5vh), 156px);
+}
+@media (max-width: 767px) {
+  .hero-title {
+    font-size: clamp(44px, 14.2vw, 88px);
+  }
+}
+
+.hero-route {
+  stroke: var(--color-ink);
+  stroke-opacity: 0.55;
+  stroke-width: 1.25;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.8s var(--ease-in-out-quart) 0.5s;
+}
+.is-ready .hero-route {
+  stroke-dashoffset: 0;
+}
+.hero-route-tick {
+  stroke: var(--color-ink);
+  stroke-opacity: 0.13;
+  stroke-width: 7;
+  stroke-dasharray: 1 11;
+  opacity: 0;
+  transition: opacity 1s ease 1.8s;
+}
+.is-ready .hero-route-tick {
+  opacity: 1;
+}
+
+.hero-node {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-out-expo);
+  transition-delay: calc(700ms + var(--i) * 170ms);
+}
+.is-ready .hero-node {
+  opacity: 1;
+}
+.hero-node-mark {
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  background: var(--color-stone);
+  border: 1.5px solid var(--color-ink);
+  transition:
+    background-color 0.25s ease,
+    transform 0.4s var(--ease-out-expo);
+}
+.hero-node[data-active="true"] .hero-node-mark {
+  background: var(--color-signal);
+  border-color: var(--color-signal);
+  transform: scale(1.25);
+}
+.hero-node-label,
+.hero-node-status {
+  position: absolute;
+  left: 14px;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hero-node-label {
+  bottom: 9px;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+.hero-node-status {
+  top: 9px;
+  color: var(--color-ink);
+  background: var(--color-stone);
+  padding: 2px 6px 2px 0;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.4s var(--ease-out-expo);
+}
+.hero-node-status::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  vertical-align: 1px;
+  background: var(--color-signal);
+}
+.hero-node[data-active="true"] .hero-node-status {
+  opacity: 1;
+  transform: none;
+}
+.hero-node-label.is-flip,
+.hero-node-status.is-flip {
+  left: auto;
+  right: 14px;
+}
+.hero-node-status.is-flip {
+  /* flipped nodes sit at the top of a riser: keep both lines above the rail */
+  top: auto;
+  bottom: 26px;
+  padding: 2px 0 2px 6px;
+}
+@media (max-width: 719px) {
+  .hero-node-label {
+    bottom: 3px;
+  }
+  .hero-node-status {
+    top: 3px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Problem: disconnected → connected, driven by --p (0..1)
+------------------------------------------------------------------- */
+.problem {
+  --p: 0;
+  --row: clamp(50px, 8.2svh, 76px);
+  --drift: 1;
+}
+@media (max-width: 767px) {
+  .problem {
+    --row: clamp(42px, 6.4svh, 56px);
+    --drift: 0.42;
+  }
+}
+.problem-meter {
+  width: calc(clamp(0, (var(--p) - 0.12) / 0.62, 1) * 100%);
+}
+.problem-row {
+  /* each row snaps into place at its own moment */
+  --q: clamp(0, calc((var(--p) - 0.14 - var(--k) * 0.072) / 0.11), 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--row);
+  padding-inline-start: 36px;
+}
+.problem-mark {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  margin-top: -6.5px;
+  border: 1.5px solid var(--color-ink);
+  background: var(--color-paper);
+  transform: translateX(calc(var(--jx) * var(--drift) * (1 - var(--q))));
+}
+[dir="rtl"] .problem-mark {
+  transform: translateX(calc(var(--jx) * var(--drift) * (var(--q) - 1)));
+}
+.problem-row:nth-child(7) .problem-mark {
+  opacity: var(--q);
+}
+.problem-text {
+  position: relative;
+  display: grid;
+  width: 100%;
+}
+.problem-before,
+.problem-after {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+.problem-before {
+  opacity: calc(1 - var(--q));
+  transform: translateX(calc(var(--jx) * var(--drift) * (1 - var(--q))));
+  color: var(--color-graphite);
+}
+[dir="rtl"] .problem-before {
+  transform: translateX(calc(var(--jx) * var(--drift) * (var(--q) - 1)));
+}
+.problem-after {
+  opacity: var(--q);
+  transform: translateY(calc((1 - var(--q)) * 10px));
+}
+.problem-name {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 110;
+  font-weight: 700;
+  font-size: clamp(19px, 2.1vw, 34px);
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+.problem-before .problem-name {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: rgb(18 20 19 / 0.35);
+}
+.problem-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+}
+.problem-link {
+  position: absolute;
+  inset-inline-start: 6px;
+  top: calc(50% + 7px);
+  height: calc(var(--row) - 14px);
+  width: 1.5px;
+}
+.problem-link-broken,
+.problem-link-solid {
+  position: absolute;
+  inset: 0;
+}
+.problem-link-broken {
+  background: repeating-linear-gradient(to bottom, var(--color-ink) 0 4px, transparent 4px 9px);
+  opacity: calc(0.45 * (1 - var(--q)));
+  transform: translateX(calc(var(--jx) * var(--drift) * (1 - var(--q))));
+}
+.problem-link-broken.is-leak {
+  /* the chain is physically broken below this row */
+  clip-path: inset(0 0 55% 0);
+}
+.problem-link-solid {
+  background: var(--color-ink);
+  transform-origin: top;
+  transform: scaleY(clamp(0, calc((var(--p) - 0.2 - var(--k) * 0.072) / 0.1), 1));
+}
+.problem-signal {
+  position: absolute;
+  inset-inline-start: 3px;
+  top: calc(var(--row) / 2 - 4px);
+  width: 8px;
+  height: 8px;
+  background: var(--color-signal);
+  opacity: clamp(0, calc((var(--p) - 0.78) / 0.08), 1);
+  animation: spine calc(5.6s) linear infinite;
+}
+@keyframes spine {
+  0% {
+    transform: translateY(0);
+  }
+  90%,
+  100% {
+    transform: translateY(calc(var(--row) * 6));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .problem-signal {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Engine
+------------------------------------------------------------------- */
+.engine-strip {
+  scrollbar-width: none;
+}
+.engine-strip::-webkit-scrollbar {
+  display: none;
+}
+.engine-track {
+  width: 100%;
+}
+@media (max-width: 1023px) {
+  .engine-track {
+    /* spans the scrollable content on mobile */
+    width: calc(var(--n, 9) * 42%);
+  }
+}
+.engine-flow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.engine-flow i {
+  position: absolute;
+  top: -2.5px;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  animation: flow 7s linear infinite;
+}
+.engine-flow i::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  background: var(--color-signal);
+  box-shadow: -14px 0 0 -1.5px rgb(255 83 22 / 0.5), -26px 0 0 -2px rgb(255 83 22 / 0.25);
+}
+.engine-flow i:nth-child(2) {
+  animation-delay: -2.4s;
+}
+.engine-flow i:nth-child(3) {
+  animation-delay: -4.9s;
+}
+@keyframes flow {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.engine-swap {
+  animation: swap 0.6s var(--ease-out-expo) both;
+}
+@keyframes swap {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Creative lab
+------------------------------------------------------------------- */
+.lab-canvas {
+  --p: 0;
+  container-type: inline-size;
+  /* spread: 0 = all formats stacked behind the product, 1 = full artboard */
+  --s: clamp(0, calc((var(--p) - 0.12) / 0.3), 1);
+}
+.lab-frame {
+  --q: clamp(0, calc(var(--s) * 1.25 - var(--k) * 0.035), 1);
+  transform: translate(calc(var(--dx) * (1 - var(--q))), calc(var(--dy) * (1 - var(--q)))) scale(calc(0.55 + 0.45 * var(--q)));
+  opacity: clamp(0, calc(var(--q) * 2), 1);
+  will-change: transform;
+}
+.lab-art {
+  transition:
+    transform 0.5s var(--ease-out-expo),
+    box-shadow 0.5s var(--ease-out-expo);
+  box-shadow: 0 1px 0 rgb(18 20 19 / 0.06);
+}
+.lab-frame:hover .lab-art {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 40px -24px rgb(18 20 19 / 0.5);
+}
+.lab-lines {
+  opacity: clamp(0, calc((var(--s) - 0.7) / 0.3), 1);
+}
+.lab-wave {
+  transform-origin: center;
+  animation: wave 1.6s ease-in-out infinite alternate;
+}
+@keyframes wave {
+  from {
+    transform: scaleY(0.45);
+  }
+}
+.lab-playhead {
+  animation: playhead 5s linear infinite;
+}
+@keyframes playhead {
+  from {
+    left: 0%;
+  }
+  to {
+    left: 100%;
+  }
+}
+.lab-float {
+  animation: float 5s ease-in-out infinite alternate;
+}
+@keyframes float {
+  to {
+    transform: translateY(-4%) rotate(-3deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-canvas {
+    --s: 1;
+  }
+}
+
+/* AI layer */
+.ai-scan {
+  transform-origin: left;
+  animation: scan 1.4s var(--ease-in-out-quart) both;
+}
+[dir="rtl"] .ai-scan {
+  transform-origin: right;
+}
+@keyframes scan {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Final: everything converges into one staircase
+------------------------------------------------------------------- */
+.final {
+  --p: 0;
+}
+.final-stage {
+  container-type: size;
+  /* the box the staircase settles into */
+  --bx0: 56;
+  --bw: 34;
+  --by0: 17;
+  --bh: 38;
+  --q: clamp(0, calc((var(--p) - 0.04) / 0.46), 1);
+}
+@media (max-width: 767px) {
+  .final-stage {
+    --bx0: 14;
+    --bw: 72;
+    --by0: 12;
+    --bh: 22;
+  }
+}
+.final-node {
+  --tx: calc(var(--bx0) + var(--bx) * var(--bw));
+  --ty: calc(var(--by0) + var(--by) * var(--bh));
+  --qk: clamp(0, calc(var(--q) * 1.3 - var(--k) * 0.025), 1);
+  left: calc(var(--tx) * 1%);
+  top: calc(var(--ty) * 1%);
+  width: 0;
+  height: 0;
+  transform: translate(
+    calc((min(var(--sx), var(--sx-max, 100)) - var(--tx)) * 1cqw * (1 - var(--qk))),
+    calc((var(--sy) - var(--ty)) * 1cqh * (1 - var(--qk)))
+  );
+  will-change: transform;
+}
+@media (max-width: 767px) {
+  .final-node {
+    --sx-max: 70;
+  }
+}
+.final-dot {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  background: var(--color-night);
+  border: 1.5px solid var(--color-stone);
+}
+.final-label {
+  position: absolute;
+  left: 14px;
+  top: -8px;
+  white-space: nowrap;
+  color: var(--color-fog);
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.34) / 0.14), 1));
+}
+.final-line {
+  left: calc(var(--bx0) * 1%);
+  top: calc(var(--by0) * 1%);
+  width: calc(var(--bw) * 1%);
+  height: calc(var(--bh) * 1%);
+  overflow: visible;
+  clip-path: inset(-10px calc((1 - clamp(0, calc((var(--p) - 0.42) / 0.2), 1)) * 100%) -10px -10px);
+}
+.final-signal {
+  left: calc((var(--bx0) + var(--bw)) * 1%);
+  top: calc(var(--by0) * 1%);
+  width: clamp(18px, 2.2vw, 30px);
+  height: clamp(18px, 2.2vw, 30px);
+  translate: -50% -50%;
+  background: var(--color-signal);
+  transform: scale(clamp(0, calc((var(--p) - 0.6) / 0.08), 1));
+}
+.final-copy > span,
+.final-cta {
+  opacity: clamp(0, calc((var(--p) - var(--at)) / 0.1), 1);
+  transform: translateY(calc((1 - clamp(0, calc((var(--p) - var(--at)) / 0.1), 1)) * 24px));
+}
+.final-l1 {
+  --at: 0.5;
+}
+.final-l2 {
+  --at: 0.56;
+}
+.final-l3 {
+  --at: 0.62;
+}
+.final-cta {
+  --at: 0.68;
+}
+@media (prefers-reduced-motion: reduce) {
+  .final {
+    --p: 1 !important;
+  }
+}
+
+/* Build: the layer names are set as large as the measure allows */
+.build-name {
+  font-size: clamp(34px, 9.1vw, 172px);
+  line-height: 0.84;
+}
+@media (max-width: 767px) {
+  .build-name {
+    font-size: 8.8vw;
+  }
+}

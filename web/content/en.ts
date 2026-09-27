@@ -1,0 +1,358 @@
+/**
+ * English dictionary. Every visible string on the page lives here.
+ * To add Arabic: create content/ar.ts exporting `const ar: Dictionary`,
+ * register it in lib/i18n.ts, and the layout will switch to dir="rtl".
+ */
+export const en = {
+  meta: {
+    title: "Nizam — We build growth systems",
+    description:
+      "Nizam designs, builds and operates the complete system that turns attention into customers: ads, creative, landing pages, AI qualification, follow-up, pipeline and attribution. Built in Riyadh for companies across the Gulf.",
+  },
+
+  nav: {
+    home: "Nizam home",
+    links: [
+      { href: "#build", label: "What we build" },
+      { href: "#system", label: "System" },
+      { href: "#lab", label: "Creative lab" },
+      { href: "#method", label: "How we work" },
+    ],
+    cta: "Build your system",
+    menu: "Menu",
+    close: "Close",
+  },
+
+  hero: {
+    eyebrow: "Growth systems · Riyadh → the Gulf",
+    title: ["We build", "growth systems"],
+    lead: "From the first impression to the final conversion.",
+    body: "Ads, creative, landing pages, AI qualification, follow-up and attribution — designed as one system, then built and operated by one team.",
+    primary: "Build your growth system",
+    secondary: "See how it works",
+    diagramLabel: "Live simulation",
+    diagramNote: "Each signal is one visitor. Not all of them convert — the system decides who deserves a conversation.",
+    diagramA11y:
+      "Animated diagram: visitors travel from an ad, through creative, a landing page, lead capture and an AI agent, to a closed sale.",
+    nodes: [
+      { id: "ad", label: "Ad", status: "Campaign live" },
+      { id: "creative", label: "Creative", status: "Variant B leading" },
+      { id: "landing", label: "Landing", status: "Form started" },
+      { id: "lead", label: "Lead", status: "Lead captured" },
+      { id: "agent", label: "AI agent", status: "Qualified · follow-up sent" },
+      { id: "sale", label: "Sale", status: "Deal won" },
+    ],
+  },
+
+  problem: {
+    kicker: "The real problem",
+    title: ["Most companies don't have a marketing problem.", "They have a disconnected system."],
+    before: {
+      label: "Today",
+      caption: "Six tools, no shared memory. Every handoff leaks.",
+      items: [
+        { name: "Ads", note: "Budget goes out" },
+        { name: "Random leads", note: "No source, no context" },
+        { name: "Excel", note: "Copied by hand" },
+        { name: "WhatsApp", note: "Personal phones, lost threads" },
+        { name: "No follow-up", note: "Leads go cold" },
+        { name: "No attribution", note: "Nobody knows what worked" },
+      ],
+    },
+    after: {
+      label: "With a system",
+      caption: "One path, measured end to end. Nothing is handed off blind.",
+      items: [
+        { name: "Ads", note: "Targeted, tested every week" },
+        { name: "High-converting creative", note: "Built from what converts" },
+        { name: "Landing page", note: "One promise, one action" },
+        { name: "CRM", note: "Every lead arrives with its source" },
+        { name: "AI follow-up", note: "Replies in minutes, Arabic or English" },
+        { name: "Sales", note: "Warm conversations only" },
+        { name: "Revenue attribution", note: "Every riyal traced to a deal" },
+      ],
+    },
+    scrollHint: "Scroll to connect",
+  },
+
+  build: {
+    kicker: "What we build",
+    title: "Three layers. One system.",
+    intro:
+      "We don't sell services by the piece. Every engagement is built across all three layers, because growth breaks at the seams between them.",
+    layers: [
+      {
+        id: "acquisition",
+        index: "01",
+        name: "Acquisition",
+        line: "Earn the right attention.",
+        body: "Paid media and creative run as one discipline. Strategy decides the message, creative gives it form, the media plan decides who sees it — and the results rewrite all three every week.",
+        items: ["Meta Ads", "Google Ads", "Creative strategy", "AI creatives", "UGC", "Motion"],
+        visualTitle: "Budget follows the winning creative",
+        visualNote: "Illustrative. Spend shifts toward the variant that produces qualified leads, not clicks.",
+        variants: [
+          { id: "A", hook: "Hook: price" },
+          { id: "B", hook: "Hook: location" },
+          { id: "C", hook: "UGC walkthrough" },
+          { id: "D", hook: "Motion teaser" },
+        ],
+      },
+      {
+        id: "conversion",
+        index: "02",
+        name: "Conversion",
+        line: "Turn attention into intent.",
+        body: "Landing pages built for one audience and one action, instrumented from the first scroll so every drop-off has a reason — and a fix.",
+        items: ["Landing pages", "Funnels", "CRO", "Lead capture", "Tracking"],
+        visualTitle: "Every interaction becomes a signal",
+        visualNote: "Events fire server-side to your ad platforms and CRM, so optimization runs on real outcomes.",
+        page: {
+          kicker: "North Riyadh · Phase II",
+          title: "Four-bedroom villas, ready to move in",
+          fields: ["Full name", "Mobile number", "Preferred viewing day"],
+          submit: "Book a viewing",
+        },
+        events: [
+          { name: "page_view", detail: "source=meta · ad=B" },
+          { name: "scroll_50", detail: "section=floor-plans" },
+          { name: "form_start", detail: "field=full_name" },
+          { name: "lead_submit", detail: "consent=true" },
+        ],
+        destinations: ["Meta CAPI", "Google Ads", "CRM"],
+      },
+      {
+        id: "intelligence",
+        index: "03",
+        name: "Intelligence",
+        line: "Turn intent into revenue.",
+        body: "AI agents qualify and follow up in minutes, the pipeline updates itself, and attribution shows which campaign produced which deal — so next month's budget goes where revenue came from.",
+        items: ["AI agents", "Automation", "Lead qualification", "Follow-up", "Dashboards", "Revenue attribution"],
+        visualTitle: "From channel to closed deal",
+        visualNote: "Illustrative attribution flow. Hover a channel to trace its path to revenue.",
+        channels: ["Meta", "Google", "Organic", "Referral"],
+        stages: ["Leads", "Qualified", "Won"],
+      },
+    ],
+  },
+
+  engine: {
+    kicker: "The growth engine",
+    title: "Follow one visitor through the system.",
+    intro: "Each stage hands off to the next with context intact. Select a stage to see what happens inside it.",
+    labels: { inside: "What happens", measure: "What we measure", output: "Hands off" },
+    stages: [
+      {
+        id: "visitor",
+        name: "Visitor",
+        inside: "Someone scrolling in Riyadh, Jeddah or Dubai. Not looking for you — yet.",
+        measure: "Audience, placement, device",
+        output: "Attention",
+      },
+      {
+        id: "ad",
+        name: "Ad",
+        inside: "A creative made for this audience earns the stop and makes one clear promise.",
+        measure: "Hook rate, click-through, cost per landing view",
+        output: "A qualified click",
+      },
+      {
+        id: "landing",
+        name: "Landing",
+        inside: "One page, one offer, one action. Fast on mobile data, right in Arabic or English.",
+        measure: "Scroll depth, form starts, field drop-off",
+        output: "A form or a WhatsApp tap",
+      },
+      {
+        id: "lead",
+        name: "Lead",
+        inside: "Captured with source, campaign, creative and page attached, then written to the CRM instantly.",
+        measure: "Source, UTM, click ID, consent",
+        output: "A lead with full context",
+      },
+      {
+        id: "qualification",
+        name: "AI qualification",
+        inside: "An agent reads the message, asks what's missing, and scores fit and intent.",
+        measure: "Budget, timeline, authority, need",
+        output: "A score and a next action",
+      },
+      {
+        id: "followup",
+        name: "Follow-up",
+        inside: "The right message on the right channel — WhatsApp, email or a call — in minutes, not days.",
+        measure: "Response time, replies, meetings booked",
+        output: "A booked conversation",
+      },
+      {
+        id: "sales",
+        name: "Sales team",
+        inside: "Your team receives warm, briefed leads with the whole conversation attached.",
+        measure: "Stage movement, time in stage",
+        output: "A qualified opportunity",
+      },
+      {
+        id: "deal",
+        name: "Deal",
+        inside: "Won or lost, the outcome is sent back to the ad platforms so they learn who actually buys.",
+        measure: "Deal value, cycle length, win reason",
+        output: "Attributed revenue",
+      },
+      {
+        id: "dashboard",
+        name: "Dashboard",
+        inside: "One view from spend to revenue, by campaign, creative and channel. Next week's decisions start here.",
+        measure: "Cost per qualified lead, pipeline, return on spend",
+        output: "The next optimization",
+      },
+    ],
+  },
+
+  lab: {
+    kicker: "Creative AI lab",
+    title: ["One product.", "Every format it needs."],
+    intro:
+      "We shoot, generate, voice and edit in one pipeline. A single product brief becomes a complete creative system — cut for every placement, and tested against itself.",
+    brief: "Sample brief",
+    product: { name: "Oud Nº 7", detail: "Eau de parfum · 50 ml", arabic: "عود ٧" },
+    frames: [
+      { id: "ugc", label: "UGC", format: "9:16" },
+      { id: "product", label: "Product ad", format: "1:1" },
+      { id: "motion", label: "Motion", format: "16:9" },
+      { id: "voice", label: "Voice-over", format: "AR / EN" },
+      { id: "short", label: "Short-form", format: "9:16" },
+      { id: "static", label: "Static ad", format: "4:5" },
+      { id: "landing", label: "Landing creative", format: "Desktop" },
+    ],
+    copy: {
+      ugcCaption: "I didn't expect oud to feel this light",
+      productLine: "Oud, made quiet.",
+      productArabic: "عود بهدوء",
+      motionKeys: ["Reveal", "Pour", "Logo"],
+      voiceScript: "هدوء العود… بلمسة حديثة",
+      voiceScriptEn: "The calm of oud — made modern.",
+      shortTitle: "3 ways to wear it",
+      staticCta: "Shop now",
+      landingTitle: "Oud, made quiet.",
+      landingCta: "Discover Nº 7",
+    },
+  },
+
+  ai: {
+    kicker: "The AI layer",
+    title: ["AI isn't a feature we add.", "It's how the system thinks."],
+    intro:
+      "Every lead passes through agents that read, qualify and act — in seconds, in Arabic or English, with a person in the loop wherever judgement matters.",
+    replay: "Replay",
+    steps: [
+      "A lead enters.",
+      "AI reads the source.",
+      "Qualifies the lead.",
+      "Understands intent.",
+      "Triggers the right follow-up.",
+      "Updates the pipeline.",
+      "Flags high-value opportunities.",
+    ],
+    record: {
+      title: "Lead record",
+      note: "Illustrative record",
+      rows: [
+        { key: "message", value: "هل عندكم فلل ٤ غرف قريبة من طريق الملك سلمان؟", arabic: true, step: 0 },
+        { key: "source", value: "Meta · North Riyadh villas · Ad B", step: 1 },
+        { key: "language", value: "Arabic → reply in Arabic", step: 1 },
+        { key: "fit", value: "Budget stated · decision maker · 60-day timeline", step: 2 },
+        { key: "intent", value: "Purchase · 4-bedroom villa · wants a viewing", step: 3 },
+        { key: "action", value: "WhatsApp reply sent with three viewing slots", step: 4 },
+        { key: "pipeline", value: "New → Qualified", step: 5 },
+        { key: "flag", value: "High value · routed to senior advisor", step: 6, signal: true },
+      ],
+    },
+  },
+
+  method: {
+    kicker: "How we work",
+    title: ["Three phases.", "The third never ends."],
+    receive: "You receive",
+    phases: [
+      {
+        index: "01",
+        name: "Diagnose",
+        body: "We map your customer journey and your current numbers: where leads come from, where they stall, and what a customer is worth.",
+        outputs: ["Journey and funnel audit", "Tracking audit", "Growth system blueprint"],
+      },
+      {
+        index: "02",
+        name: "Build",
+        body: "We build the system — creative, landing pages, CRM, automation and AI agents — connected and measured from day one.",
+        outputs: ["Creative system", "Landing pages and tracking", "CRM, automation and agents"],
+      },
+      {
+        index: "03",
+        name: "Optimize",
+        body: "We run it, measure it and improve it every week. What we learn feeds the next diagnosis.",
+        outputs: ["Weekly optimization", "Creative refresh", "Monthly revenue review"],
+      },
+    ],
+    loopNote: "Optimization feeds the next diagnosis",
+  },
+
+  offers: {
+    kicker: "Engagements",
+    title: "Three ways to start.",
+    labels: { for: "For", includes: "Includes", shape: "Shape" },
+    cta: "Talk to us",
+    items: [
+      {
+        id: "launch",
+        name: "Launch Engine",
+        for: "Launching a new product, project or service.",
+        body: "A complete launch system, built and run through the launch window: positioning, creative, landing pages, campaigns and lead handling.",
+        includes: ["Launch creative system", "Landing pages and tracking", "Meta and Google campaigns", "Lead capture and follow-up"],
+        shape: "Fixed scope · one launch",
+      },
+      {
+        id: "growth",
+        name: "Growth Engine",
+        for: "Companies with demand that needs to compound.",
+        body: "We operate and improve your growth system continuously — media, creative, conversion and follow-up, reviewed against revenue, not reach.",
+        includes: ["Media buying and creative refresh", "Conversion work on key pages", "Follow-up automation", "Monthly revenue reporting"],
+        shape: "Monthly · ongoing",
+      },
+      {
+        id: "os",
+        name: "AI Growth OS",
+        for: "Teams ready to run marketing and sales as one system.",
+        body: "A custom system connecting marketing, sales and AI — agents, pipeline, dashboards and attribution — built around how your company actually sells.",
+        includes: ["Custom AI agents", "CRM and pipeline architecture", "Dashboards and attribution", "Ongoing operation"],
+        shape: "Custom build · then operated",
+      },
+    ],
+  },
+
+  proof: {
+    kicker: "Results",
+    title: "We publish numbers when clients sign them off.",
+    body: "Every engagement reports on the same five measures. Case studies appear here once they're approved — no rounded-up figures, no borrowed logos.",
+    columns: { measure: "Measure", value: "Published value" },
+    pending: "Awaiting client sign-off",
+    casesLabel: "Case studies",
+    casesEmpty: "Case studies are published here only with written client approval.",
+  },
+
+  final: {
+    lines: ["Your marketing doesn't need more tools.", "It needs a system."],
+    closer: "Build yours.",
+    body: "Tell us what you sell and where growth stalls. We'll show you the system we would build.",
+    cta: "Start a conversation",
+    mailSubject: "Growth system — first conversation",
+    nodes: ["Ad", "Creative", "UGC", "Landing", "Tracking", "Lead", "AI agent", "Follow-up", "CRM", "Sales", "Deal", "Dashboard"],
+    a11y: "Every part of the system shown on this page converges into a single staircase: one growth system.",
+  },
+
+  footer: {
+    line: "Growth systems, designed and operated from Riyadh.",
+    rights: "All rights reserved.",
+    top: "Back to top",
+  },
+};
+
+export type Dictionary = typeof en;
