@@ -74,7 +74,7 @@ main{display:grid;grid-template-columns:1fr 380px;gap:16px;min-height:0}
 .tile img{width:100%;height:100%;object-fit:cover}
 .tile iframe{position:absolute;left:0;top:0;border:0;width:400%;height:400%;transform:scale(.25);transform-origin:0 0;pointer-events:none}
 .tile .txt{padding:24px 9px 6px;font-size:10.5px;line-height:1.35;white-space:pre-wrap;direction:auto;text-align:start;place-items:start;color:var(--text)}
-.b-APPROVED{color:var(--green)}.b-RETRY{color:var(--amber)}.b-HUMAN_REVIEW{color:var(--violet)}.b-NOT{color:var(--red)}
+.b-APPROVED{color:var(--green)}.b-EXECUTION_FAILED,.b-INCOMPLETE,.b-REJECTED{color:var(--red)}.b-RETRY{color:var(--amber)}.b-HUMAN_REVIEW{color:var(--violet)}.b-NOT{color:var(--red)}
 .final{display:flex;visibility:hidden;gap:22px;align-items:center;padding:0 16px 10px;font-size:12px;color:var(--mute)}
 .final b{color:var(--text);font-weight:700}
 body[data-state=finished] .final{visibility:visible}
@@ -217,7 +217,7 @@ function tile(name, asset) {
 function tileStatus(name, outcome, q, v) {
   const st = tiles[name].querySelector(".st");
   st.className = "st b-" + outcome;
-  st.textContent = `v${v} · ${{ APPROVED: "✓", RETRY: "↻", HUMAN_REVIEW: "⚑", REJECTED: "✕" }[outcome] ?? outcome}${q != null ? " " + q : ""}`;
+  st.textContent = `v${v} · ${{ APPROVED: "✓", RETRY: "↻", HUMAN_REVIEW: "⚑", REJECTED: "✕", EXECUTION_FAILED: "✕ FAILED", INCOMPLETE: "INCOMPLETE" }[outcome] ?? outcome}${q != null ? " " + q : ""}`;
 }
 
 function showStatus(status) {
@@ -256,7 +256,7 @@ function onEvent(e) {
       core("BRIEF", "Reading brief", 0);
       break;
     case "jev_thinking":
-      core("…", e.kind === "review" ? `Reviewing ${e.skill} v${e.version}` : e.kind === "cost_guard" ? `Cost check: ${e.skill}` : "Choosing next skill", 0, "thinking");
+      core("…", e.kind === "review" ? `Reviewing ${e.skill} v${e.version}` : e.kind === "final_review" ? "Final campaign review" : e.kind === "cost_guard" ? `Cost check: ${e.skill}` : "Choosing next skill", 0, "thinking");
       break;
     case "jev_decision": {
       if (e.kind === "next_skill") {
@@ -269,6 +269,11 @@ function onEvent(e) {
         core(action.decision.replace("_", " "), `quality ${q100(q.decision)}/100 · acceptable ${acceptable.decision ? "yes" : "no"}<br>${e.latencyMs} ms · ${esc(e.model)}`, action.confidence);
         log(e.t, `JEV review ${e.skill} v${e.version} → ${action.decision}`, "jev",
           `${decisionMeta(action, e)}<br>evidence: quality ${q100(q.decision)}/100 (${pct(q.confidence)}) · acceptable ${acceptable.decision ? "yes" : "no"} (${pct(acceptable.confidence)})`);
+      } else if (e.kind === "final_review") {
+        const { campaign_decision: d, quality_score: q, acceptable } = e.answers;
+        core(d.decision.replace(/_/g, " "), `campaign ${q100(q.decision)}/100 · acceptable ${acceptable.decision ? "yes" : "no"}<br>${e.latencyMs} ms · ${esc(e.model)}`, d.confidence);
+        log(e.t, `JEV final review → ${d.decision}`, "jev",
+          `${decisionMeta(d, e)}<br>evidence: campaign ${q100(q.decision)}/100 (${pct(q.confidence)}) · acceptable ${acceptable.decision ? "yes" : "no"} (${pct(acceptable.confidence)})`);
       } else {
         const a = e.answers.worth_it;
         log(e.t, `JEV cost guard ${e.skill} → ${a.decision ? "WORTH IT" : "NOT WORTH IT"}`, "jev", decisionMeta(a, e));
@@ -299,14 +304,17 @@ function onEvent(e) {
     }
     case "skill_failed":
       stopTimer();
-      setNode(e.skill, "HUMAN_REVIEW", "FAILED → HUMAN");
-      log(e.t, `${e.skill} execution failed`, "bad", esc(e.error.message));
+      setNode(e.skill, "NOT_CONNECTED", "EXECUTION FAILED");
+      tiles[e.skill].querySelector(".body")?.replaceChildren(document.createTextNode("EXECUTION FAILED"));
+      tileStatus(e.skill, "EXECUTION_FAILED", null, e.version);
+      log(e.t, `${e.skill} = EXECUTION_FAILED`, "bad", `reason: ${esc(e.reason)}<br>${esc(e.error.message)}`);
       break;
     case "review_outcome": {
-      const cls = { APPROVED: "ok", RETRY: "retry", HUMAN_REVIEW: "human" }[e.outcome];
-      setNode(e.skill, e.outcome, `${e.outcome.replace("_", " ")} · ${e.qualityPercent}`);
+      const cls = { APPROVED: "ok", RETRY: "retry", HUMAN_REVIEW: "human", INCOMPLETE: "bad" }[e.outcome];
+      const label = e.skill === "REVIEW" && e.outcome === "RETRY" ? `RETRY ${e.retrySkill}` : e.outcome.replace("_", " ");
+      setNode(e.skill, e.outcome === "INCOMPLETE" ? "NOT_CONNECTED" : e.outcome === "RETRY" && e.skill === "REVIEW" ? "" : e.outcome, `${label}${e.qualityPercent != null ? " · " + e.qualityPercent : ""}`);
       tileStatus(e.skill, e.outcome, e.qualityPercent, e.version);
-      log(e.t, `${e.skill} → ${e.outcome.replace("_", " ")}`, cls, esc(e.reason));
+      log(e.t, e.skill === "REVIEW" ? `Campaign → ${label}` : `${e.skill} → ${label}`, cls, esc(e.reason));
       break;
     }
     case "skill_not_connected":

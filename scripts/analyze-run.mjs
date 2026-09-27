@@ -37,6 +37,11 @@ for (const e of run.events) {
       decision = `${action.decision} (q ${Math.round((quality.decision / 4) * 100)}, ok ${acceptable.decision ? "yes" : "no"} ${pct(acceptable.confidence)})`;
       conf = action.confidence;
       skill += ` v${e.version}`;
+    } else if (e.kind === "final_review") {
+      const { campaign_decision: d, quality_score: q, acceptable } = e.answers;
+      decision = `${d.decision} (campaign ${Math.round((q.decision / 4) * 100)}, ok ${acceptable.decision ? "yes" : "no"})`;
+      conf = d.confidence;
+      skill = `REVIEW v${e.version}`;
     } else {
       decision = `worth_it ${e.answers.worth_it.decision}`; conf = e.answers.worth_it.confidence;
     }
@@ -82,3 +87,12 @@ if (run.status === "STOPPED_MAX_STEPS") {
   findings.push(`stopped at the step cap with ${total - open} skill(s) never started; ${run.steps} steps = ${run.steps - retries} first runs/picks + ${retries} retries`);
 }
 console.log(findings.length ? findings.map((f) => `  - ${f}`).join("\n") : "  - nothing abnormal");
+
+// The exact state JEV judged the campaign on (logged since final reviews were added; never contains credentials).
+console.log("\n== Final review state sent to JEV");
+const finals = run.events.filter((e) => e.type === "jev_decision" && (e.kind === "final_review" || (e.kind === "review" && e.skill === "REVIEW")));
+if (!finals.length) console.log("  no final review call in this run");
+for (const e of finals) {
+  console.log(`-- ${e.kind} v${e.version} at ${mmss(e.t)}`);
+  console.log(e.state ? JSON.stringify(e.state, null, 2) : "  (state was not logged by this older run; logging was added after it)");
+}

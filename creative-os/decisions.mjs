@@ -57,3 +57,44 @@ export function costGuardQuestions(skill, usd, remainingUsd) {
     worth_it: noul(`Is running ${skill} worth an estimated $${usd} (remaining budget $${remainingUsd}) for this brief?`),
   };
 }
+
+/**
+ * Final campaign review (REVIEW). No RETRY of REVIEW itself; JEV may name one creative skill to regenerate.
+ * retryable: creative skills that produced an output and still have retries left.
+ */
+export function finalReviewQuestions(retryable) {
+  const options = {
+    APPROVE_CAMPAIGN: "Every produced deliverable fits the brief and passed its checks; the campaign can ship as scoped.",
+    HUMAN_REVIEW: "A person must judge the campaign before it ships.",
+    INCOMPLETE: "Required deliverables are missing or failed technically, and regenerating a skill here will not fix it.",
+  };
+  for (const s of retryable) options[`RETRY_${s}`] = `Regenerate ${s}: its output has specific, fixable problems that block the campaign.`;
+  return {
+    campaign_decision: choice("Final review of the whole campaign, based only on the deliverables, their files, measurements, and validation results in the state. What should happen?", options),
+    quality_score: score("Rate the overall campaign quality for the brief, counting only deliverables that were produced.", QUALITY_RUBRIC),
+    acceptable: noul("Is the produced campaign acceptable to ship as scoped?"),
+  };
+}
+
+/** Policy: campaign_decision is executive; quality_score and acceptable are evidence. Contradictions go to a human. */
+export function finalOutcome({ decision, quality, acceptable, executionFailed }) {
+  if (decision.confidence < config.confidenceFloor) return { outcome: "HUMAN_REVIEW", reason: `campaign_decision confidence ${decision.confidence.toFixed(2)} < ${config.confidenceFloor}` };
+  const d = decision.decision;
+  if (d.startsWith("RETRY_")) return { outcome: "RETRY", retrySkill: d.slice(6), reason: `JEV asked to regenerate ${d.slice(6)} (campaign quality ${quality}/100)` };
+  if (d === "APPROVE_CAMPAIGN") {
+    if (!acceptable.decision) return { outcome: "HUMAN_REVIEW", reason: "Contradiction: APPROVE_CAMPAIGN but acceptable = no" };
+    if (quality < POLICY.approveMinQuality) return { outcome: "HUMAN_REVIEW", reason: `Contradiction: APPROVE_CAMPAIGN but quality ${quality}/100` };
+    if (executionFailed.length) return { outcome: "INCOMPLETE", reason: `JEV approved what was produced, but ${executionFailed.join(", ")} failed technically` };
+    return { outcome: "APPROVED", reason: `JEV approved the campaign (quality ${quality}/100)` };
+  }
+  if (d === "INCOMPLETE") return { outcome: "INCOMPLETE", reason: executionFailed.length ? `Incomplete: ${executionFailed.join(", ")} failed technically` : "JEV marked the campaign incomplete" };
+  return { outcome: "HUMAN_REVIEW", reason: "JEV requested human review of the campaign" };
+}
+
+/** Name the cause of a technical failure plainly instead of scoring it as low quality. */
+export function classifyFailure(message) {
+  if (/oauth|token.*(expired|invalid)|not logged in|log ?in|authenticat|401|unauthori[sz]ed/i.test(message)) return "Claude CLI authentication expired or missing (OAuth); run `claude` and log in again";
+  if (/timed out/i.test(message)) return "Generation timed out";
+  if (/not runnable|ENOENT/i.test(message)) return "Claude CLI not installed or not on PATH";
+  return "Technical failure during execution";
+}
