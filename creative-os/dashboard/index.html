@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JEV Creative OS</title>
+<style>
+:root{
+  --bg:#07070b; --panel:#0e0e15; --line:#1d1d29; --text:#ecebf3; --mute:#7c7b8f;
+  --gold:#e3b75b; --gold2:#f6d58e; --green:#4fd8a0; --amber:#f2a64a; --violet:#a98bff; --red:#ff6b7a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.4 "Inter","Helvetica Neue",Arial,sans-serif;overflow:hidden}
+body{background:radial-gradient(1200px 700px at 38% 45%,#15131f 0%,var(--bg) 60%)}
+.app{display:grid;grid-template-rows:auto auto 1fr auto;height:100vh;padding:18px 24px 16px;gap:12px}
+header{display:flex;align-items:center;gap:16px}
+.logo{font-weight:800;letter-spacing:.32em;font-size:18px}
+.logo b{color:var(--gold)}
+.pill{margin-left:auto;padding:6px 12px;border:1px solid var(--line);border-radius:99px;color:var(--mute);font-size:12px;letter-spacing:.12em}
+.pill.live{color:var(--gold);border-color:#e3b75b55}
+.pill.ok{color:var(--green);border-color:#4fd8a055}.pill.bad{color:var(--red);border-color:#ff6b7a55}
+button#run{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a1307;border:0;border-radius:10px;padding:11px 20px;font-weight:800;letter-spacing:.18em;cursor:pointer;box-shadow:0 0 30px #e3b75b44}
+button#run:disabled{opacity:.35;cursor:default;box-shadow:none}
+.brief{display:flex;gap:14px;align-items:baseline;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:#0c0c13cc}
+.brief .k{color:var(--gold);font-size:11px;letter-spacing:.22em;white-space:nowrap}
+.brief .v{font-size:15px}
+.replay{display:none;color:var(--violet);font-size:11px;letter-spacing:.14em;white-space:nowrap;margin-left:auto}
+body.is-replay .replay{display:block}
+main{display:grid;grid-template-columns:1fr 380px;gap:16px;min-height:0}
+.stage{position:relative;min-height:0}
+.stage svg.links{position:absolute;inset:0;width:100%;height:100%}
+.link{stroke:#262536;stroke-width:1.5;transition:stroke .3s}
+.link.on{stroke:var(--gold);stroke-width:2.5;filter:drop-shadow(0 0 6px var(--gold))}
+.core{position:absolute;width:210px;height:210px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle at 50% 35%,#231e10,#0d0c10 70%);border:1px solid #e3b75b55;display:grid;place-items:center;text-align:center;
+  box-shadow:0 0 60px #e3b75b22,inset 0 0 40px #e3b75b11}
+.core.thinking{animation:think 1s ease-in-out infinite}
+@keyframes think{50%{box-shadow:0 0 90px #e3b75b55,inset 0 0 50px #e3b75b33}}
+.core svg.ring{position:absolute;inset:-8px;width:226px;height:226px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4}
+.ring .track{stroke:#1d1b24}.ring .val{stroke:var(--gold);stroke-linecap:round;transition:stroke-dasharray .6s ease}
+.core .label{font-size:12px;letter-spacing:.34em;color:var(--gold)}
+.core .main{font-size:26px;font-weight:800;letter-spacing:.06em;margin:6px 0 4px;min-height:34px}
+.core .meta{font-size:11px;color:var(--mute);min-height:30px;padding:0 18px}
+.core.err{border-color:#ff6b7a88}.core.err .main{color:var(--red);font-size:18px}
+.node{position:absolute;width:124px;height:86px;transform:translate(-50%,-50%);border-radius:16px;border:1px solid var(--line);
+  background:#0f0f17ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .3s}
+.node .n{font-weight:800;letter-spacing:.2em;font-size:14px}
+.node .e{font-size:9.5px;letter-spacing:.14em;color:var(--mute)}
+.node .s{font-size:10px;letter-spacing:.14em;color:var(--mute);min-height:13px}
+.node.nc{border-style:dashed;opacity:.55}.node.nc .e{color:var(--red)}
+.node.selected{border-color:var(--gold);box-shadow:0 0 36px #e3b75b66;transform:translate(-50%,-50%) scale(1.1)}
+.node.running{border-color:var(--gold);animation:run .8s ease-in-out infinite;transform:translate(-50%,-50%) scale(1.1)}
+@keyframes run{50%{box-shadow:0 0 50px #e3b75b99}}
+.node.APPROVED{border-color:#4fd8a088}.node.APPROVED .s{color:var(--green)}
+.node.RETRY .s{color:var(--amber)}.node.RETRY{border-color:#f2a64a88}
+.node.HUMAN_REVIEW{border-color:#a98bff88}.node.HUMAN_REVIEW .s{color:var(--violet)}
+.node.NOT_CONNECTED .s{color:var(--red)}
+.timeline{border:1px solid var(--line);border-radius:14px;background:#0c0c13cc;display:flex;flex-direction:column;min-height:0}
+.timeline h3,.outputs h3{margin:0;padding:12px 16px;font-size:11px;letter-spacing:.24em;color:var(--mute);font-weight:600;border-bottom:1px solid var(--line)}
+#tl{list-style:none;margin:0;padding:8px 10px;overflow-y:auto;flex:1;scroll-behavior:smooth}
+#tl li{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:6px 6px;border-radius:8px;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateX(8px)}}
+#tl .t{font:600 12px ui-monospace,Menlo,monospace;color:var(--mute)}
+#tl .x{font-size:13px}
+#tl .m{font:11px ui-monospace,Menlo,monospace;color:var(--mute);margin-top:2px}
+#tl li.jev .x{color:var(--gold2)} #tl li.ok .x{color:var(--green)} #tl li.retry .x{color:var(--amber)}
+#tl li.human .x{color:var(--violet)} #tl li.bad .x{color:var(--red)} #tl li.done{background:#e3b75b14}
+.outputs{border:1px solid var(--line);border-radius:14px;background:#0c0c13cc}
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;padding:10px 12px}
+.tile{height:104px;border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;background:#09090e}
+.tile .h{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;gap:6px;white-space:nowrap;padding:5px 8px;font-size:9.5px;letter-spacing:.1em;background:linear-gradient(#000c,transparent);z-index:2}
+.tile .body{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);font-size:10px;letter-spacing:.14em}
+.tile img{width:100%;height:100%;object-fit:cover}
+.tile iframe{position:absolute;left:0;top:0;border:0;width:400%;height:400%;transform:scale(.25);transform-origin:0 0;pointer-events:none}
+.tile .txt{padding:24px 9px 6px;font-size:10.5px;line-height:1.35;white-space:pre-wrap;direction:auto;text-align:start;place-items:start;color:var(--text)}
+.b-APPROVED{color:var(--green)}.b-EXECUTION_FAILED,.b-INCOMPLETE,.b-REJECTED{color:var(--red)}.b-RETRY{color:var(--amber)}.b-HUMAN_REVIEW{color:var(--violet)}.b-NOT{color:var(--red)}
+.final{display:flex;visibility:hidden;gap:22px;align-items:center;padding:0 16px 10px;font-size:12px;color:var(--mute)}
+.final b{color:var(--text);font-weight:700}
+body[data-state=finished] .final{visibility:visible}
+.pace{margin-left:auto;font-size:10.5px}
+.node{width:150px!important}
+.node .e{font-size:8.5px!important;letter-spacing:.08em!important;text-align:center;padding:0 6px}
+.node .timer{font:600 10px ui-monospace,Menlo,monospace;color:var(--gold2)}
+.tile video{width:100%;height:100%;object-fit:cover}
+.tile .cap{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;font-size:8.5px;letter-spacing:.12em;color:var(--gold2);background:linear-gradient(transparent,#000d);z-index:2}
+.hr{display:flex;gap:8px;align-items:center;padding:0 16px 10px;font-size:12px;flex-wrap:wrap}
+.hr b{color:var(--violet)}.hr .why{color:var(--mute);font-size:11px;max-width:420px}
+.hr button{border:1px solid var(--line);background:#15151f;color:var(--text);border-radius:8px;padding:5px 10px;font-size:11px;letter-spacing:.1em;cursor:pointer}
+.hr button.ok{border-color:#4fd8a088;color:var(--green)}.hr button.no{border-color:#ff6b7a88;color:var(--red)}
+</style>
+</head>
+<body data-state="idle">
+<div class="app">
+  <header>
+    <div class="logo"><b>JEV</b> CREATIVE OS</div>
+    <span class="pill" id="status">IDLE</span>
+    <button id="run">RUN CREATIVE OS</button>
+  </header>
+  <div class="brief"><span class="k">BRIEF</span><span class="v" id="brief">—</span><span class="replay" id="replay">REPLAY OF A RECORDED REAL RUN</span></div>
+  <main>
+    <section class="stage" id="stage">
+      <svg class="links" id="links"></svg>
+      <div class="core" id="core">
+        <svg class="ring" viewBox="0 0 226 226"><circle class="track" cx="113" cy="113" r="108"/><circle class="val" id="ringval" cx="113" cy="113" r="108" stroke-dasharray="0 999"/></svg>
+        <div><div class="label">JEV</div><div class="main" id="coreMain">READY</div><div class="meta" id="coreMeta">Decision layer</div></div>
+      </div>
+    </section>
+    <section class="timeline"><h3>DECISION TIMELINE</h3><ul id="tl"></ul></section>
+  </main>
+  <section class="outputs">
+    <h3>FINAL OUTPUTS</h3>
+    <div class="tiles" id="tiles"></div>
+    <div class="final" id="final"></div>
+    <div id="human"></div>
+  </section>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const REPLAY = params.get("replay");
+const COMPRESS = params.get("compress");
+if (REPLAY !== null) document.body.classList.add("is-replay");
+const R = 2 * Math.PI * 108;
+let skills = [], runId = null, timer = null;
+const nodes = {}, tiles = {}, links = {};
+
+const mmss = (t) => { const s = Math.floor(t / 1000); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+const pct = (x) => `${Math.round(x * 100)}%`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const q100 = (s) => Math.round((s / 4) * 100);
+
+function layout() {
+  const st = $("stage").getBoundingClientRect();
+  const cx = st.width / 2, cy = st.height / 2;
+  const rx = Math.min(st.width / 2 - 85, 330), ry = Math.min(st.height / 2 - 48, 200);
+  $("links").innerHTML = "";
+  skills.forEach((s, i) => {
+    // Offset by half a slot so no node sits directly above or below the core.
+    const a = -Math.PI / 2 + Math.PI / skills.length + (i * 2 * Math.PI) / skills.length;
+    const x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a);
+    Object.assign(nodes[s.name].style, { left: `${x}px`, top: `${y}px` });
+    const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    Object.entries({ x1: cx, y1: cy, x2: x, y2: y, class: "link" }).forEach(([k, v]) => l.setAttribute(k, v));
+    $("links").appendChild(l);
+    links[s.name] = l;
+  });
+}
+
+async function init() {
+  const { skills: list, brief } = await (await fetch("/api/skills")).json();
+  skills = list;
+  $("brief").innerHTML = `${esc(brief.text)} <span style="color:var(--mute);font-size:12px">· working name: ${esc(brief.brand)} · ${esc(brief.product)}</span>`;
+  for (const s of skills) {
+    const n = document.createElement("div");
+    n.className = "node" + (s.status !== "CONNECTED" ? " nc" : "");
+    n.innerHTML = `<div class="n">${s.name}</div><div class="e">${esc(s.label)}</div><div class="s"></div>`;
+    $("stage").appendChild(n);
+    nodes[s.name] = n;
+    const t = document.createElement("div");
+    t.className = "tile";
+    t.innerHTML = `<div class="h"><span>${s.name}</span><span class="st"></span></div><div class="body">${s.status === "CONNECTED" ? "WAITING" : "NOT CONNECTED"}</div>`;
+    $("tiles").appendChild(t);
+    tiles[s.name] = t;
+  }
+  layout();
+  addEventListener("resize", layout);
+}
+
+function setNode(name, state, label) {
+  const n = nodes[name];
+  n.classList.remove("selected", "running", "APPROVED", "RETRY", "HUMAN_REVIEW", "NOT_CONNECTED");
+  if (state) n.classList.add(state);
+  n.querySelector(".s").textContent = label ?? "";
+}
+function select(name) {
+  Object.entries(links).forEach(([k, l]) => l.classList.toggle("on", k === name));
+  Object.values(nodes).forEach((n) => n.classList.remove("selected"));
+  if (name && nodes[name]) nodes[name].classList.add("selected");
+}
+function core(main, meta, conf, cls) {
+  $("coreMain").textContent = main;
+  $("coreMeta").innerHTML = meta ?? "";
+  $("core").className = "core" + (cls ? " " + cls : "");
+  $("ringval").setAttribute("stroke-dasharray", `${(conf ?? 0) * R} ${R}`);
+}
+function log(t, text, cls = "", meta = "") {
+  const li = document.createElement("li");
+  li.className = cls;
+  li.innerHTML = `<span class="t">${mmss(t)}</span><div><div class="x">${text}</div>${meta ? `<div class="m">${meta}</div>` : ""}</div>`;
+  $("tl").appendChild(li);
+  $("tl").scrollTop = $("tl").scrollHeight;
+}
+const decisionMeta = (a, e) => `conf ${pct(a.confidence)} · ${e.latencyMs} ms · ${esc(e.model)}`;
+
+// Elapsed time on the running skill; counts from the event timestamps, so replays show the real duration.
+function startTimer(name, t) {
+  stopTimer();
+  const started = performance.now();
+  const s = nodes[name].querySelector(".s");
+  timer = setInterval(() => { s.textContent = `RUNNING ${mmss(t + performance.now() - started).slice(1)}`; }, 250);
+}
+function stopTimer() { clearInterval(timer); timer = null; }
+
+function tile(name, asset) {
+  const t = tiles[name], ev = asset.evidence, url = "/" + asset.file;
+  let body;
+  if (name === "IMAGE") body = `<img src="${url}" alt=""><div class="cap">VECTOR IMAGE · LLM AUTHORED</div>`;
+  else if (name === "MOTION") body = `<video src="${url}" autoplay muted loop playsinline></video><div class="cap">MOTION GRAPHICS · ${Math.round((ev.duration?.animationMs ?? 0) / 100) / 10}s WEBM</div>`;
+  else if (name === "FRONTEND") body = `<img src="/${ev.screenshots[0]}" alt=""><div class="cap">TESTED · DESKTOP + MOBILE · ${ev.validation.passed}/${ev.validation.passed + ev.validation.failed} CHECKS</div>`;
+  else if (name === "COPY") body = `<div class="body txt">${esc(ev.generated_content?.x_post ?? "")}</div>`;
+  else if (name === "REVIEW") body = `<div class="body txt">${ev.validation.passed} checks passed\n${ev.validation.failed} failed${ev.not_connected?.length ? "\nnot connected: " + esc(ev.not_connected.join(", ")) : ""}</div>`;
+  t.querySelectorAll(".body,img,video,iframe,.txt,.cap").forEach((el) => el.remove());
+  t.insertAdjacentHTML("beforeend", body);
+  t.querySelector(".st").textContent = `v${asset.version}`;
+}
+function tileStatus(name, outcome, q, v) {
+  const st = tiles[name].querySelector(".st");
+  st.className = "st b-" + outcome;
+  st.textContent = `v${v} · ${{ APPROVED: "✓", RETRY: "↻", HUMAN_REVIEW: "⚑", REJECTED: "✕", EXECUTION_FAILED: "✕ FAILED", INCOMPLETE: "INCOMPLETE" }[outcome] ?? outcome}${q != null ? " " + q : ""}`;
+}
+
+function showStatus(status) {
+  const ok = status === "DONE";
+  $("status").textContent = status.replace(/_/g, " ");
+  $("status").className = "pill " + (ok ? "ok" : status === "AWAITING_HUMAN_REVIEW" ? "live" : "bad");
+  document.body.dataset.status = status;
+}
+
+function humanPanel(summary) {
+  const waiting = Object.entries(summary.skillState).filter(([, s]) => s === "HUMAN_REVIEW");
+  $("human").innerHTML = waiting.map(([k]) => {
+    const why = summary.executions?.[k]?.at(-1)?.reason ?? "";
+    return `<div class="hr" data-skill="${k}"><b>HUMAN REVIEW · ${k}</b><span class="why">${esc(why)}</span>
+      <button class="ok" data-d="approve">APPROVE</button><button class="no" data-d="reject">REJECT</button></div>`;
+  }).join("");
+  $("human").querySelectorAll("button").forEach((b) => b.addEventListener("click", async () => {
+    const skill = b.closest(".hr").dataset.skill;
+    const res = await fetch(`/api/runs/${encodeURIComponent(runId)}/human-review`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ skill, decision: b.dataset.d }) });
+    const r = await res.json();
+    if (!res.ok) return alert(r.error);
+    onEvent({ type: "human_review", t: 0, ...r });
+  }));
+}
+
+function onEvent(e) {
+  switch (e.type) {
+    case "replay_info":
+      $("replay").textContent = `${e.compressedGapMs ? "TIME-COMPRESSED " : ""}REPLAY OF REAL RUN ${e.runId}${e.compressedGapMs ? " · TIMESTAMPS ARE REAL" : ""}`;
+      break;
+    case "run_started":
+      runId = e.runId;
+      if (!e.replayOf) { $("status").textContent = "LIVE"; } else { $("status").textContent = "REPLAY"; }
+      $("status").className = "pill live";
+      log(e.t, "Brief received");
+      core("BRIEF", "Reading brief", 0);
+      break;
+    case "jev_thinking":
+      core("…", e.kind === "review" ? `Reviewing ${e.skill} v${e.version}` : e.kind === "final_review" ? "Final campaign review" : e.kind === "cost_guard" ? `Cost check: ${e.skill}` : "Choosing next skill", 0, "thinking");
+      break;
+    case "jev_decision": {
+      if (e.kind === "next_skill") {
+        const a = e.answers.next_skill;
+        core(`→ ${a.decision}`, decisionMeta(a, e), a.confidence);
+        select(a.decision);
+        log(e.t, `JEV → ${a.decision}`, "jev", decisionMeta(a, e));
+      } else if (e.kind === "review") {
+        const { review_action: action, quality_score: q, acceptable } = e.answers;
+        core(action.decision.replace("_", " "), `quality ${q100(q.decision)}/100 · acceptable ${acceptable.decision ? "yes" : "no"}<br>${e.latencyMs} ms · ${esc(e.model)}`, action.confidence);
+        log(e.t, `JEV review ${e.skill} v${e.version} → ${action.decision}`, "jev",
+          `${decisionMeta(action, e)}<br>evidence: quality ${q100(q.decision)}/100 (${pct(q.confidence)}) · acceptable ${acceptable.decision ? "yes" : "no"} (${pct(acceptable.confidence)})`);
+      } else if (e.kind === "final_review") {
+        const { campaign_decision: d, quality_score: q, acceptable } = e.answers;
+        core(d.decision.replace(/_/g, " "), `campaign ${q100(q.decision)}/100 · acceptable ${acceptable.decision ? "yes" : "no"}<br>${e.latencyMs} ms · ${esc(e.model)}`, d.confidence);
+        log(e.t, `JEV final review → ${d.decision}`, "jev",
+          `${decisionMeta(d, e)}<br>evidence: campaign ${q100(q.decision)}/100 (${pct(q.confidence)}) · acceptable ${acceptable.decision ? "yes" : "no"} (${pct(acceptable.confidence)})`);
+      } else {
+        const a = e.answers.worth_it;
+        log(e.t, `JEV cost guard ${e.skill} → ${a.decision ? "WORTH IT" : "NOT WORTH IT"}`, "jev", decisionMeta(a, e));
+      }
+      break;
+    }
+    case "only_option":
+      select(e.skill);
+      core(`→ ${e.skill}`, "only remaining skill · no JEV call needed", 0);
+      log(e.t, `${e.skill} is the only remaining skill`, "", "no decision to make · no JEV call");
+      break;
+    case "skill_started":
+      select(e.skill);
+      setNode(e.skill, "running", `RUNNING v${e.version}`);
+      if (!COMPRESS) startTimer(e.skill, 0);
+      log(e.t, `${e.skill} running${e.version > 1 ? ` (retry, v${e.version})` : ""}`, "", esc(e.engine));
+      break;
+    case "skill_completed": {
+      stopTimer();
+      const ev = e.asset.evidence, v = ev.validation;
+      setNode(e.skill, "running", `v${e.version} OUTPUT READY`);
+      tile(e.skill, e.asset);
+      const bits = [ev.files?.[0] && `${Math.round(ev.files[0].bytes / 1024)} KB`, ev.dimensions && `${ev.dimensions.width}×${ev.dimensions.height}`,
+        ev.duration?.animationMs && `${Math.round(ev.duration.animationMs / 100) / 10}s`, v && `${v.passed}/${v.passed + v.failed} checks`,
+        ev.generator?.durationMs && `${Math.round(ev.generator.durationMs / 1000)}s ${esc(ev.generator.model ?? "")}`].filter(Boolean);
+      log(e.t, `${e.skill} output → ${esc(e.asset.file.split("/").pop())}`, v?.failed ? "retry" : "", bits.join(" · "));
+      break;
+    }
+    case "skill_failed":
+      stopTimer();
+      setNode(e.skill, "NOT_CONNECTED", "EXECUTION FAILED");
+      tiles[e.skill].querySelector(".body")?.replaceChildren(document.createTextNode("EXECUTION FAILED"));
+      tileStatus(e.skill, "EXECUTION_FAILED", null, e.version);
+      log(e.t, `${e.skill} = EXECUTION_FAILED`, "bad", `reason: ${esc(e.reason)}<br>${esc(e.error.message)}`);
+      break;
+    case "review_outcome": {
+      const cls = { APPROVED: "ok", RETRY: "retry", HUMAN_REVIEW: "human", INCOMPLETE: "bad" }[e.outcome];
+      const label = e.skill === "REVIEW" && e.outcome === "RETRY" ? `RETRY ${e.retrySkill}` : e.outcome.replace("_", " ");
+      setNode(e.skill, e.outcome === "INCOMPLETE" ? "NOT_CONNECTED" : e.outcome === "RETRY" && e.skill === "REVIEW" ? "" : e.outcome, `${label}${e.qualityPercent != null ? " · " + e.qualityPercent : ""}`);
+      tileStatus(e.skill, e.outcome, e.qualityPercent, e.version);
+      log(e.t, e.skill === "REVIEW" ? `Campaign → ${label}` : `${e.skill} → ${label}`, cls, esc(e.reason));
+      break;
+    }
+    case "skill_not_connected":
+      setNode(e.skill, "NOT_CONNECTED", "NOT CONNECTED");
+      log(e.t, `${e.skill} NOT CONNECTED — excluded`, "bad", "no provider configured · never executed");
+      break;
+    case "guard":
+      if (e.skill) setNode(e.skill, "HUMAN_REVIEW", "HUMAN REVIEW");
+      log(e.t, `Guard${e.skill ? " · " + e.skill : ""}: ${esc(e.reason)}`, "human");
+      break;
+    case "error":
+      stopTimer();
+      core("JEV ERROR", esc(`${e.error.name}${e.error.status ? " " + e.error.status : ""}`), 0, "err");
+      log(e.t, `Error: ${esc(e.error.name)}`, "bad", esc(e.error.message));
+      break;
+    case "human_review":
+      setNode(e.skill, e.decision === "approve" ? "APPROVED" : "NOT_CONNECTED", e.decision === "approve" ? "APPROVED BY HUMAN" : "REJECTED BY HUMAN");
+      tileStatus(e.skill, e.decision === "approve" ? "APPROVED" : "REJECTED", null, "");
+      log(e.t || 0, `Human ${e.decision === "approve" ? "approved" : "rejected"} ${e.skill}`, e.decision === "approve" ? "ok" : "bad", `run status → ${e.status}`);
+      document.querySelector(`.hr[data-skill="${e.skill}"]`)?.remove();
+      showStatus(e.status);
+      if (e.status === "DONE") core("DONE", "all connected skills approved", 1);
+      break;
+    case "run_finished": {
+      stopTimer();
+      select(null);
+      const ok = e.status === "DONE";
+      showStatus(e.status);
+      if (e.status !== "FAILED") core(ok ? "DONE" : e.status.replace(/_/g, " "), `${e.jevCalls} JEV decisions`, 1);
+      log(e.t, `${e.status.replace(/_/g, " ")}`, "done " + (ok ? "ok" : e.status === "AWAITING_HUMAN_REVIEW" ? "human" : "bad"));
+      $("final").innerHTML = `<span>STATUS <b>${e.status}</b></span><span>JEV CALLS <b>${e.jevCalls}</b></span>
+        <span>JEV LATENCY <b>${e.jevLatencyMs} ms</b></span><span>MODEL <b>${esc(e.models.join(", ") || "—")}</b></span>
+        <span>STEPS <b>${e.steps}/${e.maxSteps}</b></span><span class="pace">latency = JEV API call only · timeline = real elapsed time</span>`;
+      if (REPLAY === null && e.status === "AWAITING_HUMAN_REVIEW") humanPanel(e);
+      document.body.dataset.state = "finished";
+      $("run").disabled = false;
+      requestAnimationFrame(() => { $("tl").scrollTop = $("tl").scrollHeight; });
+      break;
+    }
+  }
+}
+
+function start() {
+  $("run").disabled = true;
+  document.body.dataset.state = "running";
+  const q = new URLSearchParams();
+  if (REPLAY) q.set("run", REPLAY);
+  if (COMPRESS) q.set("compress", COMPRESS);
+  const src = new EventSource(REPLAY !== null ? `/api/replay?${q}` : "/api/run");
+  src.onmessage = (m) => onEvent(JSON.parse(m.data));
+  src.onerror = () => {
+    src.close();
+    if (document.body.dataset.state !== "finished") {
+      log(0, "Stream closed before the run finished", "bad");
+      document.body.dataset.status = "STREAM_ERROR";
+      document.body.dataset.state = "finished";
+      $("run").disabled = false;
+    }
+  };
+}
+$("run").addEventListener("click", start);
+init();
+</script>
+</body>
+</html>
