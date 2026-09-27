@@ -1,5 +1,9 @@
 {
   "dependencies": {
     "@typesafe-ai/sdk": "^0.6.0"
+  },
+  "type": "module",
+  "scripts": {
+    "jev:smoke": "node --env-file-if-exists=.env jev/smoke-test.mjs"
   }
 }
